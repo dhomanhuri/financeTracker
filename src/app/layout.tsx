@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/context/AuthContext";
+import Chatbot from "@/components/Chatbot";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Dompet Kaca - Finance Tracker",
-  description: "Simple Finance Tracker with Next.js and Supabase",
+  title: "Illyas Finance - Premium Tracker",
+  description: "Modern Finance Tracker for professional wealth management",
 };
 
 export default function RootLayout({
@@ -30,6 +31,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           {children}
+          <Chatbot />
         </AuthProvider>
       </body>
     </html>
