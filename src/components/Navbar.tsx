@@ -27,6 +27,7 @@ export default function Navbar() {
     { name: 'Dashboard', icon: LayoutDashboardIcon, href: '/' },
     { name: 'Categories', icon: TagsIcon, href: '/categories' },
     { name: 'Accounts', icon: CreditCardIcon, href: '/accounts' },
+    { name: 'API', icon: Code2Icon, href: '/settings' },
   ];
 
   return (

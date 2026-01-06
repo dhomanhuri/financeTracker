@@ -63,7 +63,41 @@ npm run dev
 
 Buka [http://localhost:3000](http://localhost:3000) di browser Anda.
 
-## Teknologi
+## REST API
+
+Aplikasi ini sekarang mendukung akses via API dengan autentikasi API Key. Anda dapat mengelola API Key di menu **API Settings** di dalam aplikasi.
+
+### Autentikasi
+Gunakan header `x-api-key` pada setiap request:
+```bash
+x-api-key: ft_your_api_key_here
+```
+
+### Endpoints
+
+| Method | Endpoint | Deskripsi |
+|--------|----------|-----------|
+| `GET` | `/api/v1/summary` | Mendapatkan ringkasan saldo dan transaksi terbaru |
+| `GET` | `/api/v1/accounts` | Mendapatkan daftar semua akun |
+| `GET` | `/api/v1/categories` | Mendapatkan daftar kategori |
+| `GET` | `/api/v1/transactions` | Mendapatkan riwayat transaksi |
+| `POST` | `/api/v1/transactions` | Membuat transaksi baru |
+
+### Contoh Request (Tambah Transaksi)
+```bash
+curl -X POST http://localhost:3000/api/v1/transactions \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d '{
+    "amount": 50000,
+    "type": "expense",
+    "category_id": "uuid-kategori",
+    "account_id": "uuid-akun",
+    "description": "Makan Siang via API"
+  }'
+```
+
+> **Catatan Penting**: Agar API dapat berjalan, Anda perlu menambahkan `SUPABASE_SERVICE_ROLE_KEY` ke dalam file `.env.local` Anda. Kunci ini diperlukan untuk memvalidasi API Key secara aman di sisi server.
 
 - Next.js 15 (App Router)
 - TypeScript
