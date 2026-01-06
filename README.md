@@ -1,6 +1,6 @@
 # Finance Tracker
 
-Aplikasi pencatat keuangan sederhana yang dibangun menggunakan Next.js dan Supabase.
+Aplikasi pencatat keuangan sederhana yang dibangun menggunakan Next.js dan Supabase..
 
 ## Fitur
 
