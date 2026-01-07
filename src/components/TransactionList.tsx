@@ -56,7 +56,9 @@ export default function TransactionList({ transactions, onDelete, isLoading }: T
                   {transaction.title}
                 </h3>
                 <div className="flex items-center gap-3">
-                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{transaction.category}</span>
+                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                    {transaction.categories?.name || 'Uncategorized'}
+                  </span>
                   <div className="w-1 h-1 rounded-full bg-white/10"></div>
                   {transaction.accounts && (
                     <span 

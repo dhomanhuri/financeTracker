@@ -20,9 +20,12 @@ export interface Transaction {
   title: string;
   amount: number;
   type: 'income' | 'expense';
-  category: string;
+  category_id: string;
   date: string;
-  account_id?: string;
+  account_id: string;
+  categories?: {
+    name: string;
+  };
   accounts?: {
     name: string;
     color: string;

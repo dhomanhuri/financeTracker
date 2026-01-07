@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Category } from '@/types';
 import Navbar from '@/components/Navbar';
-import { PlusIcon, Trash2Icon, ArrowLeftIcon, ChevronDownIcon } from 'lucide-react';
+import { PlusIcon, Trash2Icon, ArrowLeftIcon, ChevronDownIcon, Edit2Icon, CheckIcon, XIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -14,6 +14,8 @@ export default function CategoriesPage() {
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState('');
   const [newType, setNewType] = useState<'income' | 'expense'>('expense');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -69,6 +71,39 @@ export default function CategoriesPage() {
     } catch (error: any) {
       console.error('Error adding category:', error);
       alert(error.code === '23505' ? 'Kategori sudah ada!' : 'Gagal menambah kategori.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const startEditing = (category: Category) => {
+    setEditingId(category.id);
+    setEditingName(category.name);
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditingName('');
+  };
+
+  const updateCategory = async (id: string) => {
+    if (!editingName.trim()) return;
+
+    try {
+      setActionLoading(true);
+      const { error } = await supabase
+        .from('categories')
+        .update({ name: editingName })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setCategories(categories.map(c => c.id === id ? { ...c, name: editingName } : c));
+      setEditingId(null);
+      setEditingName('');
+    } catch (error: any) {
+      console.error('Error updating category:', error);
+      alert('Gagal memperbarui kategori.');
     } finally {
       setActionLoading(false);
     }
@@ -190,24 +225,68 @@ export default function CategoriesPage() {
                   <div className="divide-y divide-white/5 max-h-[600px] overflow-y-auto custom-scrollbar">
                     {categories.map((category) => (
                       <div key={category.id} className="p-6 flex items-center justify-between group hover:bg-white/[0.03] transition-all">
-                        <div className="flex items-center gap-5">
+                        <div className="flex-1 flex items-center gap-5">
                           <div className={`p-3 rounded-xl ${category.type === 'income' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
                             <div className="w-2.5 h-2.5 rounded-full bg-current shadow-[0_0_10px_currentColor]"></div>
                           </div>
-                          <div className="flex flex-col">
-                            <span className="text-white font-bold text-lg tracking-tight">{category.name}</span>
-                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">
-                              {category.type}
-                            </span>
-                          </div>
+                          
+                          {editingId === category.id ? (
+                            <div className="flex-1 flex items-center gap-2">
+                              <input
+                                type="text"
+                                className="flex-1 bg-white/5 border border-accent/30 rounded-xl px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-accent transition-all"
+                                value={editingName}
+                                onChange={(e) => setEditingName(e.target.value)}
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') updateCategory(category.id);
+                                  if (e.key === 'Escape') cancelEditing();
+                                }}
+                              />
+                              <button
+                                onClick={() => updateCategory(category.id)}
+                                className="p-2 text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-all"
+                                title="Save"
+                              >
+                                <CheckIcon size={18} />
+                              </button>
+                              <button
+                                onClick={cancelEditing}
+                                className="p-2 text-gray-500 hover:bg-white/10 rounded-lg transition-all"
+                                title="Cancel"
+                              >
+                                <XIcon size={18} />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col">
+                              <span className="text-white font-bold text-lg tracking-tight">{category.name}</span>
+                              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">
+                                {category.type}
+                              </span>
+                            </div>
+                          )}
                         </div>
-                        <button
-                          onClick={() => deleteCategory(category.id)}
-                          disabled={actionLoading}
-                          className="text-gray-600 hover:text-red-500 p-3 rounded-xl hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all"
-                        >
-                          <Trash2Icon size={20} />
-                        </button>
+                        
+                        <div className="flex items-center gap-1">
+                          {editingId !== category.id && (
+                            <button
+                              onClick={() => startEditing(category)}
+                              className="text-gray-600 hover:text-accent p-3 rounded-xl hover:bg-accent/10 opacity-0 group-hover:opacity-100 transition-all"
+                              title="Edit"
+                            >
+                              <Edit2Icon size={18} />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => deleteCategory(category.id)}
+                            disabled={actionLoading}
+                            className="text-gray-600 hover:text-red-500 p-3 rounded-xl hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all"
+                            title="Delete"
+                          >
+                            <Trash2Icon size={20} />
+                          </button>
+                        </div>
                       </div>
                     ))}
                     {categories.length === 0 && (

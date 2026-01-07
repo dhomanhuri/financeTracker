@@ -44,7 +44,7 @@ export default function Home() {
 
       const { data, error } = await supabase
         .from('transactions')
-        .select('*, accounts(name, color)')
+        .select('*, accounts(name, color), categories(name)')
         .order('date', { ascending: false })
         .order('created_at', { ascending: false });
 
@@ -77,7 +77,7 @@ export default function Home() {
       const { data, error } = await supabase
         .from('transactions')
         .insert([newTransaction])
-        .select()
+        .select('*, accounts(name, color), categories(name)')
         .single();
 
       if (error) throw error;

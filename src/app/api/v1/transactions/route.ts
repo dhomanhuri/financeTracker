@@ -15,8 +15,8 @@ export async function GET(req: Request) {
       .from('transactions')
       .select(`
         *,
-        category:categories(name, type, color, icon),
-        account:accounts(name)
+        categories(name, type),
+        accounts(name, color)
       `)
       .eq('user_id', userId)
       .order('date', { ascending: false })
@@ -36,11 +36,14 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { amount, type, category_id, account_id, description, date } = body;
+    const { amount, type, category_id, account_id, title, description, date } = body;
+    
+    // Use title if provided, otherwise fallback to description
+    const transactionTitle = title || description;
 
     // Basic validation
-    if (!amount || !type || !category_id || !account_id) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    if (!amount || !type || !category_id || !account_id || !transactionTitle) {
+      return NextResponse.json({ error: 'Missing required fields (amount, type, category_id, account_id, title/description)' }, { status: 400 });
     }
 
     // 1. Insert transaction
@@ -52,7 +55,7 @@ export async function POST(req: Request) {
         type,
         category_id,
         account_id,
-        description,
+        title: transactionTitle,
         date: date || new Date().toISOString()
       }])
       .select()

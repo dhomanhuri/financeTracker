@@ -17,7 +17,7 @@ export default function TransactionForm({ onAdd, isLoading }: TransactionFormPro
     title: '',
     amount: 0,
     type: 'expense',
-    category: '',
+    category_id: '',
     date: new Date().toISOString().split('T')[0],
     account_id: '',
   });
@@ -35,7 +35,7 @@ export default function TransactionForm({ onAdd, isLoading }: TransactionFormPro
     if (catRes.data) {
       setCategories(catRes.data);
       const firstCat = catRes.data.find(c => c.type === formData.type);
-      if (firstCat) setFormData(prev => ({ ...prev, category: firstCat.name }));
+      if (firstCat) setFormData(prev => ({ ...prev, category_id: firstCat.id }));
     }
 
     if (accRes.data) {
@@ -50,7 +50,7 @@ export default function TransactionForm({ onAdd, isLoading }: TransactionFormPro
   useEffect(() => {
     const firstCat = categories.find(c => c.type === formData.type);
     if (firstCat) {
-      setFormData(prev => ({ ...prev, category: firstCat.name }));
+      setFormData(prev => ({ ...prev, category_id: firstCat.id }));
     }
   }, [formData.type, categories]);
 
@@ -63,7 +63,7 @@ export default function TransactionForm({ onAdd, isLoading }: TransactionFormPro
       title: '',
       amount: 0,
       type: 'expense',
-      category: categories.find(c => c.type === 'expense')?.name || '',
+      category_id: categories.find(c => c.type === 'expense')?.id || '',
       date: new Date().toISOString().split('T')[0],
       account_id: accounts[0]?.id || '',
     });
@@ -155,11 +155,11 @@ export default function TransactionForm({ onAdd, isLoading }: TransactionFormPro
           <div className="relative">
             <select
               className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all appearance-none cursor-pointer"
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              value={formData.category_id}
+              onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
             >
               {filteredCategories.map((cat) => (
-                <option key={cat.id} value={cat.name} className="bg-slate-900">
+                <option key={cat.id} value={cat.id} className="bg-slate-900">
                   {cat.name}
                 </option>
               ))}

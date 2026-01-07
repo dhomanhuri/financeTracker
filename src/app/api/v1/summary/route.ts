@@ -26,8 +26,8 @@ export async function GET(req: Request) {
       .from('transactions')
       .select(`
         *,
-        category:categories(name, type, color, icon),
-        account:accounts(name)
+        categories(name, type),
+        accounts(name, color)
       `)
       .eq('user_id', userId)
       .order('date', { ascending: false })
