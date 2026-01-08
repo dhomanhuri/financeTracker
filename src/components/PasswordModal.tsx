@@ -44,10 +44,10 @@ export default function PasswordModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-md bg-slate-900 border border-white/10 rounded-2xl shadow-2xl p-6 relative animate-scale-in">
+      <div className="w-full max-w-md bg-card-bg border border-border rounded-2xl shadow-2xl p-6 relative animate-scale-in">
         <button 
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
         >
           <XIcon size={20} />
         </button>
@@ -56,8 +56,8 @@ export default function PasswordModal({
           <div className="p-3 bg-accent/10 rounded-full text-accent mb-4">
             <LockIcon size={24} />
           </div>
-          <h3 className="text-xl font-bold text-white">{title}</h3>
-          <p className="text-gray-400 text-sm text-center mt-2">
+          <h3 className="text-xl font-bold text-foreground">{title}</h3>
+          <p className="text-muted-foreground text-sm text-center mt-2">
             {description}
           </p>
         </div>
@@ -69,7 +69,7 @@ export default function PasswordModal({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent transition-all"
+              className="w-full bg-card-bg border border-border rounded-xl px-4 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent transition-all"
               autoFocus
             />
             {error && (
@@ -81,14 +81,14 @@ export default function PasswordModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3 px-4 bg-white/5 hover:bg-white/10 text-white rounded-xl font-medium transition-all"
+              className="flex-1 py-3 px-4 bg-muted hover:bg-muted/80 text-foreground rounded-xl font-medium transition-all"
               disabled={loading}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 py-3 px-4 bg-accent hover:bg-accent/90 text-white rounded-xl font-bold transition-all shadow-lg shadow-accent/20 flex items-center justify-center gap-2"
+              className="flex-1 py-3 px-4 bg-accent hover:bg-accent/90 text-accent-foreground rounded-xl font-bold transition-all shadow-lg shadow-accent/20 flex items-center justify-center gap-2"
               disabled={loading || !password}
             >
               {loading ? (

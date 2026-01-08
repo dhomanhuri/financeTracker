@@ -140,7 +140,7 @@ export default function AccountsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -149,7 +149,7 @@ export default function AccountsPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-gray-300 selection:bg-accent/30 selection:text-accent">
+    <div className="min-h-screen bg-background text-foreground selection:bg-accent/30 selection:text-accent transition-colors duration-300">
       <Navbar />
       
       <main className="py-24 px-4 sm:px-6 lg:px-8 animate-fade-in">
@@ -158,7 +158,7 @@ export default function AccountsPage() {
           <div className="mb-12">
             <Link 
               href="/" 
-              className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-accent transition-colors mb-6 group"
+              className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-accent transition-colors mb-6 group"
             >
               <ArrowLeftIcon size={16} className="group-hover:-translate-x-1 transition-transform" />
               Back to Dashboard
@@ -166,10 +166,10 @@ export default function AccountsPage() {
             
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div>
-                <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-3">
+                <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight mb-3">
                   Accounts <span className="text-accent">Management</span>
                 </h1>
-                <p className="text-gray-500 text-lg max-w-2xl">
+                <p className="text-muted-foreground text-lg max-w-2xl">
                   Organize your financial sources and track balances across all your accounts in one place.
                 </p>
               </div>
@@ -182,17 +182,17 @@ export default function AccountsPage() {
               <div className="glass-card p-8 rounded-[2rem] sticky top-28">
                 <div className="flex items-center gap-3 mb-8">
                   <div className="w-1.5 h-6 bg-accent rounded-full"></div>
-                  <h2 className="text-xl font-bold text-white tracking-tight">Add New Account</h2>
+                  <h2 className="text-xl font-bold text-foreground tracking-tight">Add New Account</h2>
                 </div>
 
                 <form onSubmit={addAccount} className="space-y-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">
                       Account Name
                     </label>
                     <input
                       type="text"
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all"
+                      className="w-full bg-card-bg border border-border rounded-2xl px-5 py-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all"
                       placeholder="e.g. Bank Central, Main Wallet"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -200,14 +200,14 @@ export default function AccountsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">
                       Initial Balance
                     </label>
                     <div className="relative">
-                      <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500 font-medium">Rp</div>
+                      <div className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">Rp</div>
                       <input
                         type="number"
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-5 py-4 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all tabular-nums"
+                        className="w-full bg-card-bg border border-border rounded-2xl pl-12 pr-5 py-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all tabular-nums"
                         placeholder="0"
                         value={formData.balance}
                         onChange={(e) => setFormData({ ...formData, balance: Number(e.target.value) })}
@@ -216,7 +216,7 @@ export default function AccountsPage() {
                   </div>
 
                   <div className="space-y-3">
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">
                       Theme Color
                     </label>
                     <div className="flex flex-wrap gap-3 p-2">
@@ -226,7 +226,7 @@ export default function AccountsPage() {
                           type="button"
                           className={`w-10 h-10 rounded-full border-4 transition-all duration-300 ${
                             formData.color === color 
-                              ? 'border-white scale-110 shadow-lg' 
+                              ? 'border-foreground scale-110 shadow-lg' 
                               : 'border-transparent hover:scale-110'
                           }`}
                           style={{ backgroundColor: color, boxShadow: formData.color === color ? `0 0 20px ${color}40` : 'none' }}
@@ -237,7 +237,7 @@ export default function AccountsPage() {
                   </div>
 
                   <div className="space-y-3">
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">
                       Account Icon
                     </label>
                     <div className="grid grid-cols-5 gap-3">
@@ -247,8 +247,8 @@ export default function AccountsPage() {
                           type="button"
                           className={`aspect-square rounded-2xl border transition-all duration-300 flex items-center justify-center ${
                             formData.icon === item.name 
-                              ? 'bg-accent border-accent text-slate-950 shadow-lg shadow-accent/20 scale-105' 
-                              : 'bg-white/5 border-white/10 text-gray-500 hover:text-white hover:bg-white/10'
+                              ? 'bg-accent border-accent text-accent-foreground shadow-lg shadow-accent/20 scale-105' 
+                              : 'bg-card-bg border-border text-muted-foreground hover:text-foreground hover:bg-accent/10'
                           }`}
                           onClick={() => setFormData({ ...formData, icon: item.name })}
                         >
@@ -261,10 +261,10 @@ export default function AccountsPage() {
                   <button
                     type="submit"
                     disabled={actionLoading || !formData.name}
-                    className="w-full bg-accent hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-bold py-5 px-6 rounded-2xl transition-all flex items-center justify-center gap-3 shadow-xl shadow-accent/20 active:scale-[0.98]"
+                    className="w-full bg-accent hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed text-accent-foreground font-bold py-5 px-6 rounded-2xl transition-all flex items-center justify-center gap-3 shadow-xl shadow-accent/20 active:scale-[0.98]"
                   >
                     {actionLoading ? (
-                      <div className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                      <div className="w-5 h-5 border-2 border-accent-foreground border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <>
                         <SaveIcon size={20} />
@@ -282,9 +282,9 @@ export default function AccountsPage() {
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
                     <div className="w-1.5 h-6 bg-accent/50 rounded-full"></div>
-                    <h2 className="text-xl font-bold text-white tracking-tight">Active Accounts</h2>
+                    <h2 className="text-xl font-bold text-foreground tracking-tight">Active Accounts</h2>
                   </div>
-                  <span className="px-4 py-1.5 bg-white/5 border border-white/10 rounded-full text-xs font-medium text-gray-400">
+                  <span className="px-4 py-1.5 bg-card-bg border border-border rounded-full text-xs font-medium text-muted-foreground">
                     {accounts.length} {accounts.length === 1 ? 'Account' : 'Accounts'}
                   </span>
                 </div>
@@ -292,15 +292,15 @@ export default function AccountsPage() {
                 {loading ? (
                   <div className="glass-card p-20 rounded-[2.5rem] flex flex-col items-center justify-center gap-4">
                     <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-                    <p className="text-gray-500 font-medium">Loading your accounts...</p>
+                    <p className="text-muted-foreground font-medium">Loading your accounts...</p>
                   </div>
                 ) : accounts.length === 0 ? (
                   <div className="glass-card p-20 rounded-[2.5rem] text-center border-dashed">
-                    <div className="inline-flex p-6 bg-white/5 rounded-full mb-6 text-gray-600">
+                    <div className="inline-flex p-6 bg-accent/5 rounded-full mb-6 text-muted-foreground">
                       <WalletIcon size={48} />
                     </div>
-                    <h3 className="text-2xl font-bold text-white mb-3">No Accounts Yet</h3>
-                    <p className="text-gray-500 max-w-sm mx-auto text-lg">
+                    <h3 className="text-2xl font-bold text-foreground mb-3">No Accounts Yet</h3>
+                    <p className="text-muted-foreground max-w-sm mx-auto text-lg">
                       Start by adding your first account like a bank account, digital wallet, or physical cash.
                     </p>
                   </div>
@@ -309,7 +309,7 @@ export default function AccountsPage() {
                     {accounts.map((account) => (
                       <div 
                         key={account.id}
-                        className="group relative glass-card p-6 rounded-[2rem] hover:bg-white/10 transition-all duration-500 hover:-translate-y-1"
+                        className="group relative glass-card p-6 rounded-[2rem] hover:bg-accent/5 transition-all duration-500 hover:-translate-y-1"
                       >
                         <div className="flex items-start justify-between mb-6">
                           <div 
@@ -325,7 +325,7 @@ export default function AccountsPage() {
                           </div>
                           <button
                             onClick={() => deleteAccount(account.id)}
-                            className="p-3 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100 active:scale-90"
+                            className="p-3 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100 active:scale-90"
                             title="Delete Account"
                           >
                             <Trash2Icon size={20} />
@@ -333,10 +333,10 @@ export default function AccountsPage() {
                         </div>
 
                         <div>
-                          <h3 className="text-xl font-bold text-white mb-2 group-hover:text-accent transition-colors">
+                          <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-accent transition-colors">
                             {account.name}
                           </h3>
-                          <div className="text-3xl font-bold text-white tracking-tight tabular-nums">
+                          <div className="text-3xl font-bold text-foreground tracking-tight tabular-nums">
                             <MaskedAmount amount={account.balance} />
                           </div>
                         </div>

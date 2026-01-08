@@ -72,10 +72,10 @@ export default function Chatbot() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 w-16 h-16 bg-accent text-slate-950 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-all z-50 group active:scale-95 ring-4 ring-accent/20"
+        className="fixed bottom-6 right-6 w-16 h-16 bg-accent text-accent-foreground rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-all z-50 group active:scale-95 ring-4 ring-accent/20"
       >
         <MessageSquareIcon size={28} strokeWidth={2.5} />
-        <span className="absolute right-full mr-4 bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-white/10 shadow-xl pointer-events-none">
+        <span className="absolute right-full mr-4 bg-background text-foreground px-4 py-2 rounded-xl text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-border shadow-xl pointer-events-none">
           Tanya Illyas AI
         </span>
       </button>
@@ -83,15 +83,15 @@ export default function Chatbot() {
   }
 
   return (
-    <div className={`fixed bottom-6 right-6 w-[400px] max-w-[calc(100vw-3rem)] ${isMinimized ? 'h-auto' : 'h-[600px] max-h-[calc(100vh-8rem)]'} glass-card rounded-[2.5rem] shadow-2xl flex flex-col z-50 overflow-hidden animate-fade-in ring-1 ring-white/10`}>
+    <div className={`fixed bottom-6 right-6 w-[400px] max-w-[calc(100vw-3rem)] ${isMinimized ? 'h-auto' : 'h-[600px] max-h-[calc(100vh-8rem)]'} glass-card rounded-[2.5rem] shadow-2xl flex flex-col z-50 overflow-hidden animate-fade-in ring-1 ring-border`}>
       {/* Header */}
-      <div className="p-6 bg-white/5 border-b border-white/10 flex items-center justify-between">
+      <div className="p-6 bg-card-bg border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-accent/20 rounded-2xl flex items-center justify-center text-accent ring-1 ring-accent/30">
             <BotIcon size={24} strokeWidth={2.5} />
           </div>
           <div>
-            <h3 className="font-bold text-white tracking-tight">Illyas Finance AI</h3>
+            <h3 className="font-bold text-foreground tracking-tight">Illyas Finance AI</h3>
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
               <span className="text-[10px] font-bold text-emerald-500/80 uppercase tracking-widest">Online</span>

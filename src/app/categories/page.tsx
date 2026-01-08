@@ -131,7 +131,7 @@ export default function CategoriesPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -140,19 +140,19 @@ export default function CategoriesPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-20 text-foreground transition-colors duration-300">
       <Navbar />
       
       <main className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
           <div className="mb-12 flex items-center justify-between animate-fade-in">
             <div className="flex items-center gap-6">
-              <Link href="/" className="p-3 glass rounded-2xl text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+              <Link href="/" className="p-3 glass rounded-2xl text-muted-foreground hover:text-foreground hover:bg-card-bg transition-all">
                 <ArrowLeftIcon size={22} />
               </Link>
               <div className="flex flex-col">
-                <h1 className="text-4xl font-bold text-white tracking-tight">Categories</h1>
-                <p className="text-gray-500 text-sm">Organize your financial flow</p>
+                <h1 className="text-4xl font-bold text-foreground tracking-tight">Categories</h1>
+                <p className="text-muted-foreground text-sm">Organize your financial flow</p>
               </div>
             </div>
           </div>
@@ -163,33 +163,33 @@ export default function CategoriesPage() {
               <div className="glass-card p-8 rounded-[2rem] sticky top-28">
                 <div className="flex items-center gap-3 mb-8">
                   <div className="w-1.5 h-6 bg-accent rounded-full"></div>
-                  <h2 className="text-xl font-bold text-white tracking-tight">Add Category</h2>
+                  <h2 className="text-xl font-bold text-foreground tracking-tight">Add Category</h2>
                 </div>
 
                 <form onSubmit={addCategory} className="space-y-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">Category Name</label>
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">Category Name</label>
                     <input
                       type="text"
                       required
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all"
+                      className="w-full bg-card-bg border border-border rounded-2xl px-5 py-4 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all"
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
                       placeholder="e.g. Transportation"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] ml-1">Type</label>
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">Type</label>
                     <div className="relative">
                       <select
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all appearance-none cursor-pointer"
+                        className="w-full bg-card-bg border border-border rounded-2xl px-5 py-4 text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all appearance-none cursor-pointer"
                         value={newType}
                         onChange={(e) => setNewType(e.target.value as 'income' | 'expense')}
                       >
-                        <option value="expense" className="bg-slate-900">Expense</option>
-                        <option value="income" className="bg-slate-900">Income</option>
+                        <option value="expense" className="bg-card-bg text-foreground">Expense</option>
+                        <option value="income" className="bg-card-bg text-foreground">Income</option>
                       </select>
-                      <ChevronDownIcon className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={18} />
+                      <ChevronDownIcon className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" size={18} />
                     </div>
                   </div>
                   <button
@@ -207,10 +207,10 @@ export default function CategoriesPage() {
             {/* List Kategori */}
             <div className="lg:col-span-8">
               <div className="glass-card rounded-[2.5rem] overflow-hidden">
-                <div className="p-8 border-b border-white/5 bg-white/2 flex justify-between items-center">
+                <div className="p-8 border-b border-border bg-accent/5 flex justify-between items-center">
                   <div className="flex items-center gap-3">
                     <div className="w-1.5 h-6 bg-accent rounded-full"></div>
-                    <h2 className="text-xl font-bold text-white tracking-tight">Available Categories</h2>
+                    <h2 className="text-xl font-bold text-foreground tracking-tight">Available Categories</h2>
                   </div>
                   <span className="text-[10px] font-bold text-accent bg-accent/10 px-3 py-1.5 rounded-full border border-accent/20 uppercase tracking-widest">
                     {categories.length} Total
@@ -222,11 +222,11 @@ export default function CategoriesPage() {
                     <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent"></div>
                   </div>
                 ) : (
-                  <div className="divide-y divide-white/5 max-h-[600px] overflow-y-auto custom-scrollbar">
+                  <div className="divide-y divide-border max-h-[600px] overflow-y-auto custom-scrollbar">
                     {categories.map((category) => (
-                      <div key={category.id} className="p-6 flex items-center justify-between group hover:bg-white/[0.03] transition-all">
+                      <div key={category.id} className="p-6 flex items-center justify-between group hover:bg-accent/5 transition-all">
                         <div className="flex-1 flex items-center gap-5">
-                          <div className={`p-3 rounded-xl ${category.type === 'income' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+                          <div className={`p-3 rounded-xl ${category.type === 'income' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
                             <div className="w-2.5 h-2.5 rounded-full bg-current shadow-[0_0_10px_currentColor]"></div>
                           </div>
                           
@@ -234,7 +234,7 @@ export default function CategoriesPage() {
                             <div className="flex-1 flex items-center gap-2">
                               <input
                                 type="text"
-                                className="flex-1 bg-white/5 border border-accent/30 rounded-xl px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-accent transition-all"
+                                className="flex-1 bg-card-bg border border-accent/30 rounded-xl px-4 py-2 text-foreground focus:outline-none focus:ring-1 focus:ring-accent transition-all"
                                 value={editingName}
                                 onChange={(e) => setEditingName(e.target.value)}
                                 autoFocus
@@ -252,7 +252,7 @@ export default function CategoriesPage() {
                               </button>
                               <button
                                 onClick={cancelEditing}
-                                className="p-2 text-gray-500 hover:bg-white/10 rounded-lg transition-all"
+                                className="p-2 text-muted-foreground hover:bg-card-bg rounded-lg transition-all"
                                 title="Cancel"
                               >
                                 <XIcon size={18} />
@@ -260,8 +260,8 @@ export default function CategoriesPage() {
                             </div>
                           ) : (
                             <div className="flex flex-col">
-                              <span className="text-white font-bold text-lg tracking-tight">{category.name}</span>
-                              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">
+                              <span className="text-foreground font-bold text-lg tracking-tight">{category.name}</span>
+                              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
                                 {category.type}
                               </span>
                             </div>
@@ -272,7 +272,7 @@ export default function CategoriesPage() {
                           {editingId !== category.id && (
                             <button
                               onClick={() => startEditing(category)}
-                              className="text-gray-600 hover:text-accent p-3 rounded-xl hover:bg-accent/10 opacity-0 group-hover:opacity-100 transition-all"
+                              className="text-muted-foreground hover:text-accent p-3 rounded-xl hover:bg-accent/10 opacity-0 group-hover:opacity-100 transition-all"
                               title="Edit"
                             >
                               <Edit2Icon size={18} />
@@ -281,7 +281,7 @@ export default function CategoriesPage() {
                           <button
                             onClick={() => deleteCategory(category.id)}
                             disabled={actionLoading}
-                            className="text-gray-600 hover:text-red-500 p-3 rounded-xl hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all"
+                            className="text-muted-foreground hover:text-red-500 p-3 rounded-xl hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all"
                             title="Delete"
                           >
                             <Trash2Icon size={20} />
@@ -291,7 +291,7 @@ export default function CategoriesPage() {
                     ))}
                     {categories.length === 0 && (
                       <div className="p-20 text-center">
-                        <p className="text-gray-500 font-medium">No categories found.</p>
+                        <p className="text-muted-foreground font-medium">No categories found.</p>
                       </div>
                     )}
                   </div>

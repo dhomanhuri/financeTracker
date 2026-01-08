@@ -51,7 +51,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0a0c10] flex items-center justify-center p-4 selection:bg-accent/30 selection:text-accent relative overflow-hidden">
+    <main className="min-h-screen bg-background text-foreground flex items-center justify-center p-4 selection:bg-accent/30 selection:text-accent relative overflow-hidden transition-colors duration-300">
       {/* Decorative Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-accent/10 rounded-full blur-[120px] animate-pulse"></div>

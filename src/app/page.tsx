@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { NewTransaction, Transaction } from '@/types';
 import DashboardSummary from '@/components/DashboardSummary';
+import CashFlowChart from '@/components/charts/CashFlowChart';
+import ExpenseCategoryChart from '@/components/charts/ExpenseCategoryChart';
 import TransactionForm from '@/components/TransactionForm';
 import TransactionList from '@/components/TransactionList';
 import Navbar from '@/components/Navbar';
@@ -209,7 +211,7 @@ export default function Home() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       <Navbar />
       
       <main className="py-8 px-4 sm:px-6 lg:px-8">
@@ -222,7 +224,13 @@ export default function Home() {
             <>
               <DashboardSummary transactions={transactions} totalAccountBalance={totalAccountBalance} />
 
-              <div className="mt-16 grid grid-cols-1 lg:grid-cols-12 gap-8">
+              {/* Charts Section */}
+              <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in">
+                <CashFlowChart transactions={transactions} />
+                <ExpenseCategoryChart transactions={transactions} />
+              </div>
+
+              <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
                 <div className="lg:col-span-4">
                   <TransactionForm onAdd={addTransaction} isLoading={actionLoading} />
                 </div>
@@ -235,8 +243,8 @@ export default function Home() {
                           <FilterIcon size={18} />
                         </div>
                         <div>
-                          <h3 className="text-sm font-bold text-white uppercase tracking-wider">Filter Period</h3>
-                          <p className="text-[10px] text-gray-500 font-medium">Show transactions within range</p>
+                          <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">Filter Period</h3>
+                          <p className="text-[10px] text-muted-foreground font-medium">Show transactions within range</p>
                         </div>
                       </div>
 
@@ -244,16 +252,16 @@ export default function Home() {
                         <div className="relative">
                           <input
                             type="date"
-                            className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-accent transition-all [color-scheme:dark]"
+                            className="bg-card-bg border border-border rounded-xl px-4 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent transition-all dark:[color-scheme:dark]"
                             value={dateRange.from}
                             onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
                           />
                         </div>
-                        <span className="text-gray-600 text-xs font-bold">TO</span>
+                        <span className="text-muted-foreground text-xs font-bold">TO</span>
                         <div className="relative">
                           <input
                             type="date"
-                            className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-accent transition-all [color-scheme:dark]"
+                            className="bg-card-bg border border-border rounded-xl px-4 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent transition-all dark:[color-scheme:dark]"
                             value={dateRange.to}
                             onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
                           />
@@ -261,7 +269,7 @@ export default function Home() {
                         {(dateRange.from || dateRange.to) && (
                           <button
                             onClick={clearFilters}
-                            className="p-2 text-gray-500 hover:text-white hover:bg-white/10 rounded-xl transition-all"
+                            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/10 rounded-xl transition-all"
                             title="Clear Filters"
                           >
                             <XIcon size={18} />
@@ -272,22 +280,22 @@ export default function Home() {
 
                     {/* Period Summary Details */}
                     {periodSummary && (
-                      <div className="mt-6 pt-6 border-t border-white/5 grid grid-cols-3 gap-4 animate-fade-in">
+                      <div className="mt-6 pt-6 border-t border-border grid grid-cols-3 gap-4 animate-fade-in">
                         <div className="text-center md:text-left">
-                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">In Period</p>
-                          <p className="text-sm font-bold text-green-400">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">In Period</p>
+                          <p className="text-sm font-bold text-green-500">
                             + Rp {periodSummary.total_income.toLocaleString('id-ID')}
                           </p>
                         </div>
                         <div className="text-center md:text-left">
-                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Out Period</p>
-                          <p className="text-sm font-bold text-red-400">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Out Period</p>
+                          <p className="text-sm font-bold text-red-500">
                             - Rp {periodSummary.total_expense.toLocaleString('id-ID')}
                           </p>
                         </div>
                         <div className="text-center md:text-left">
-                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Net Change</p>
-                          <p className={`text-sm font-bold ${periodSummary.net_change >= 0 ? 'text-accent' : 'text-orange-400'}`}>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Net Change</p>
+                          <p className={`text-sm font-bold ${periodSummary.net_change >= 0 ? 'text-accent' : 'text-orange-500'}`}>
                             {periodSummary.net_change >= 0 ? '+' : ''} Rp {periodSummary.net_change.toLocaleString('id-ID')}
                           </p>
                         </div>
