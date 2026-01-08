@@ -56,7 +56,7 @@ export async function POST(req: Request) {
         category_id,
         account_id,
         title: transactionTitle,
-        date: date || new Date().toISOString()
+        date: date || new Date().toISOString().split('T')[0]
       }])
       .select()
       .single();
