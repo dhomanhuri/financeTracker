@@ -24,10 +24,10 @@ export default function SettingsPage() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       fetchApiKeys();
     }
-  }, [user]);
+  }, [user?.id]);
 
   const fetchApiKeys = async () => {
     setLoading(true);

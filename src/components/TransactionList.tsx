@@ -2,6 +2,7 @@
 
 import { Transaction } from '@/types';
 import { Trash2Icon, TrendingUpIcon, TrendingDownIcon } from 'lucide-react';
+import MaskedAmount from './MaskedAmount';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -83,7 +84,10 @@ export default function TransactionList({ transactions, onDelete, isLoading }: T
                     transaction.type === 'income' ? 'text-green-400' : 'text-red-400'
                   }`}
                 >
-                  {transaction.type === 'income' ? '+' : '-'} Rp {transaction.amount.toLocaleString('id-ID')}
+                  <MaskedAmount 
+                    amount={transaction.amount} 
+                    prefix={transaction.type === 'income' ? '+ Rp ' : '- Rp '} 
+                  />
                 </p>
               </div>
               

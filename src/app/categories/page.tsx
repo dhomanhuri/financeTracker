@@ -27,10 +27,10 @@ export default function CategoriesPage() {
   }, [user, authLoading, router]);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       fetchCategories();
     }
-  }, [user]);
+  }, [user?.id]);
 
   const fetchCategories = async () => {
     if (!user) return;

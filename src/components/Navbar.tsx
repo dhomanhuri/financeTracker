@@ -12,16 +12,19 @@ import {
   Code2Icon, 
   SettingsIcon,
   EyeOffIcon,
+  EyeIcon,
   SunIcon,
   TagsIcon,
   LogOutIcon,
   UserIcon
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { usePrivacy } from '@/context/PrivacyContext';
 
 export default function Navbar() {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
+  const { isMasked, toggleMask } = usePrivacy();
 
   const navItems = [
     { name: 'Dashboard', icon: LayoutDashboardIcon, href: '/' },
@@ -67,6 +70,18 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-3">
+            <button 
+              onClick={toggleMask}
+              className={`p-2 rounded-lg transition-all ${
+                isMasked 
+                  ? 'text-gray-400 hover:text-white hover:bg-white/5' 
+                  : 'bg-accent/10 text-accent hover:bg-accent/20'
+              }`}
+              title={isMasked ? "Show all amounts" : "Hide all amounts"}
+            >
+              {isMasked ? <EyeOffIcon size={20} /> : <EyeIcon size={20} />}
+            </button>
+
             <button className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all">
               <SunIcon size={20} />
             </button>

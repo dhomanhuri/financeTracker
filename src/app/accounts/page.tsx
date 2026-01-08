@@ -18,6 +18,7 @@ import {
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import MaskedAmount from '@/components/MaskedAmount';
 
 const ICONS = [
   { name: 'Wallet', icon: WalletIcon },
@@ -58,10 +59,10 @@ export default function AccountsPage() {
   }, [user, authLoading, router]);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       fetchAccounts();
     }
-  }, [user]);
+  }, [user?.id]);
 
   const fetchAccounts = async () => {
     if (!user) return;
@@ -335,11 +336,8 @@ export default function AccountsPage() {
                           <h3 className="text-xl font-bold text-white mb-2 group-hover:text-accent transition-colors">
                             {account.name}
                           </h3>
-                          <div className="flex items-baseline gap-1">
-                            <span className="text-sm font-medium text-gray-500">Rp</span>
-                            <span className="text-3xl font-bold text-white tracking-tight tabular-nums">
-                              {account.balance.toLocaleString('id-ID')}
-                            </span>
+                          <div className="text-3xl font-bold text-white tracking-tight tabular-nums">
+                            <MaskedAmount amount={account.balance} />
                           </div>
                         </div>
 

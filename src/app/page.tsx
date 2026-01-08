@@ -36,10 +36,10 @@ export default function Home() {
   }, [user, authLoading, router]);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       fetchTransactions();
     }
-  }, [user, dateRange]);
+  }, [user?.id, dateRange]);
 
   const fetchTransactions = async () => {
     if (!user) return;

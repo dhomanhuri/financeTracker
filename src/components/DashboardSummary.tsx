@@ -2,6 +2,7 @@
 
 import { Transaction } from '@/types';
 import { TrendingDownIcon, WalletIcon, TrendingUpIcon } from 'lucide-react';
+import MaskedAmount from './MaskedAmount';
 
 interface DashboardSummaryProps {
   transactions: Transaction[];
@@ -57,7 +58,7 @@ export default function DashboardSummary({ transactions, totalAccountBalance }: 
             Current Net Worth
           </span>
           <h2 className="text-white text-5xl md:text-7xl font-bold tracking-tight mb-4 tabular-nums">
-            Rp {balance.toLocaleString('id-ID')}
+            <MaskedAmount amount={balance} />
           </h2>
           <p className="text-gray-500 font-medium mb-12">{formattedDate}</p>
           
@@ -68,7 +69,7 @@ export default function DashboardSummary({ transactions, totalAccountBalance }: 
                 <span className="text-sm font-bold uppercase tracking-wider">Income</span>
               </div>
               <p className="text-2xl font-bold text-white tabular-nums">
-                Rp {monthlyIncome.toLocaleString('id-ID')}
+                <MaskedAmount amount={monthlyIncome} />
               </p>
               <span className="text-[10px] text-gray-500 mt-1 uppercase">This Month</span>
             </div>
@@ -79,7 +80,7 @@ export default function DashboardSummary({ transactions, totalAccountBalance }: 
                 <span className="text-sm font-bold uppercase tracking-wider">Expense</span>
               </div>
               <p className="text-2xl font-bold text-white tabular-nums">
-                Rp {monthlyExpense.toLocaleString('id-ID')}
+                <MaskedAmount amount={monthlyExpense} />
               </p>
               <span className="text-[10px] text-gray-500 mt-1 uppercase">This Month</span>
             </div>
@@ -97,7 +98,7 @@ export default function DashboardSummary({ transactions, totalAccountBalance }: 
             <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Savings</span>
           </div>
           <p className="text-gray-400 text-sm mb-1">Total Savings</p>
-          <p className="text-2xl font-bold text-white tabular-nums">Rp {balance.toLocaleString('id-ID')}</p>
+          <p className="text-2xl font-bold text-white tabular-nums"><MaskedAmount amount={balance} /></p>
         </div>
 
         <div className="glass-card p-6 rounded-3xl hover:bg-white/5 transition-all group">
@@ -108,7 +109,7 @@ export default function DashboardSummary({ transactions, totalAccountBalance }: 
             <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Growth</span>
           </div>
           <p className="text-gray-400 text-sm mb-1">Total Revenue</p>
-          <p className="text-2xl font-bold text-white tabular-nums">Rp {totalIncome.toLocaleString('id-ID')}</p>
+          <p className="text-2xl font-bold text-white tabular-nums"><MaskedAmount amount={totalIncome} /></p>
         </div>
 
         <div className="glass-card p-6 rounded-3xl hover:bg-white/5 transition-all group">
@@ -119,7 +120,7 @@ export default function DashboardSummary({ transactions, totalAccountBalance }: 
             <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Spending</span>
           </div>
           <p className="text-gray-400 text-sm mb-1">Total Expenses</p>
-          <p className="text-2xl font-bold text-white tabular-nums">Rp {totalExpense.toLocaleString('id-ID')}</p>
+          <p className="text-2xl font-bold text-white tabular-nums"><MaskedAmount amount={totalExpense} /></p>
         </div>
       </div>
     </div>

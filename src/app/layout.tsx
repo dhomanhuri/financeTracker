@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/context/AuthContext";
+import { PrivacyProvider } from "@/context/PrivacyContext";
 import Chatbot from "@/components/Chatbot";
 import "./globals.css";
 
@@ -30,8 +31,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          {children}
-          <Chatbot />
+          <PrivacyProvider>
+            {children}
+            <Chatbot />
+          </PrivacyProvider>
         </AuthProvider>
       </body>
     </html>
