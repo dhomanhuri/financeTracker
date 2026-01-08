@@ -9,11 +9,22 @@ import TransactionList from '@/components/TransactionList';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { CalendarIcon, FilterIcon, XIcon } from 'lucide-react';
 
 export default function Home() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [dateRange, setDateRange] = useState({
+    from: '',
+    to: ''
+  });
+  const [periodSummary, setPeriodSummary] = useState<{
+    total_income: number;
+    total_expense: number;
+    net_change: number;
+  } | null>(null);
+
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
@@ -27,7 +38,7 @@ export default function Home() {
     if (user) {
       fetchTransactions();
     }
-  }, [user]);
+  }, [user, dateRange]);
 
   const fetchTransactions = async () => {
     if (!user) return;
@@ -42,31 +53,51 @@ export default function Home() {
         return;
       }
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('transactions')
         .select('*, accounts(name, color), categories(name)')
+        .eq('user_id', user.id);
+
+      if (dateRange.from) query = query.gte('date', dateRange.from);
+      if (dateRange.to) query = query.lte('date', dateRange.to);
+
+      const { data, error } = await query
         .order('date', { ascending: false })
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Supabase Error Details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
-        throw error;
+      if (error) throw error;
+      
+      if (data) {
+        setTransactions(data);
+        
+        // Calculate period summary if filters are active
+        if (dateRange.from || dateRange.to) {
+          const summary = data.reduce((acc, tx) => {
+            if (tx.type === 'income') acc.total_income += tx.amount;
+            else acc.total_expense += tx.amount;
+            return acc;
+          }, { total_income: 0, total_expense: 0 });
+          
+          setPeriodSummary({
+            ...summary,
+            net_change: summary.total_income - summary.total_expense
+          });
+        } else {
+          setPeriodSummary(null);
+        }
       }
-      if (data) setTransactions(data);
     } catch (error: any) {
       console.error('Error fetching transactions:', error);
-      // If table doesn't exist, show a more helpful message
       if (error?.code === 'PGRST116' || error?.message?.includes('relation "transactions" does not exist')) {
-        alert('Table "transactions" does not exist in Supabase. Please run the SQL in schema.sql via SQL Editor in Supabase Dashboard.');
+        alert('Table "transactions" does not exist in Supabase. Please run the SQL scripts.');
       }
     } finally {
       setLoading(false);
     }
+  };
+
+  const clearFilters = () => {
+    setDateRange({ from: '', to: '' });
   };
 
   const addTransaction = async (newTransaction: NewTransaction) => {
@@ -183,7 +214,75 @@ export default function Home() {
                 <div className="lg:col-span-4">
                   <TransactionForm onAdd={addTransaction} isLoading={actionLoading} />
                 </div>
-                <div className="lg:col-span-8">
+                <div className="lg:col-span-8 space-y-6">
+                  {/* Period Filter UI */}
+                  <div className="glass-card p-6 rounded-[2rem] animate-fade-in border-accent/10">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-accent/10 rounded-xl text-accent">
+                          <FilterIcon size={18} />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-white uppercase tracking-wider">Filter Period</h3>
+                          <p className="text-[10px] text-gray-500 font-medium">Show transactions within range</p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="relative">
+                          <input
+                            type="date"
+                            className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-accent transition-all [color-scheme:dark]"
+                            value={dateRange.from}
+                            onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
+                          />
+                        </div>
+                        <span className="text-gray-600 text-xs font-bold">TO</span>
+                        <div className="relative">
+                          <input
+                            type="date"
+                            className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-accent transition-all [color-scheme:dark]"
+                            value={dateRange.to}
+                            onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
+                          />
+                        </div>
+                        {(dateRange.from || dateRange.to) && (
+                          <button
+                            onClick={clearFilters}
+                            className="p-2 text-gray-500 hover:text-white hover:bg-white/10 rounded-xl transition-all"
+                            title="Clear Filters"
+                          >
+                            <XIcon size={18} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Period Summary Details */}
+                    {periodSummary && (
+                      <div className="mt-6 pt-6 border-t border-white/5 grid grid-cols-3 gap-4 animate-fade-in">
+                        <div className="text-center md:text-left">
+                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">In Period</p>
+                          <p className="text-sm font-bold text-green-400">
+                            + Rp {periodSummary.total_income.toLocaleString('id-ID')}
+                          </p>
+                        </div>
+                        <div className="text-center md:text-left">
+                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Out Period</p>
+                          <p className="text-sm font-bold text-red-400">
+                            - Rp {periodSummary.total_expense.toLocaleString('id-ID')}
+                          </p>
+                        </div>
+                        <div className="text-center md:text-left">
+                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Net Change</p>
+                          <p className={`text-sm font-bold ${periodSummary.net_change >= 0 ? 'text-accent' : 'text-orange-400'}`}>
+                            {periodSummary.net_change >= 0 ? '+' : ''} Rp {periodSummary.net_change.toLocaleString('id-ID')}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   <TransactionList
                     transactions={transactions}
                     onDelete={deleteTransaction}

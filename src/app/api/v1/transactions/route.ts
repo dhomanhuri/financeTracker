@@ -9,20 +9,60 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const limit = parseInt(searchParams.get('limit') || '20');
   const offset = parseInt(searchParams.get('offset') || '0');
+  const from = searchParams.get('from');
+  const to = searchParams.get('to');
 
   try {
-    const { data, error } = await userClient
+    let query = userClient
       .from('transactions')
       .select(`
         *,
         categories(name, type),
         accounts(name, color)
       `)
-      .eq('user_id', userId)
+      .eq('user_id', userId);
+
+    if (from) query = query.gte('date', from);
+    if (to) query = query.lte('date', to);
+
+    const { data, error } = await query
       .order('date', { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) throw error;
+
+    // If period filter is applied, calculate summary for that period
+    if (from || to) {
+      let summaryQuery = userClient
+        .from('transactions')
+        .select('amount, type')
+        .eq('user_id', userId);
+      
+      if (from) summaryQuery = summaryQuery.gte('date', from);
+      if (to) summaryQuery = summaryQuery.lte('date', to);
+
+      const { data: summaryData } = await summaryQuery;
+      
+      const summary = {
+        total_income: 0,
+        total_expense: 0,
+        net_change: 0,
+        transaction_count: data?.length || 0
+      };
+
+      summaryData?.forEach(tx => {
+        if (tx.type === 'income') summary.total_income += tx.amount;
+        else summary.total_expense += tx.amount;
+      });
+      summary.net_change = summary.total_income - summary.total_expense;
+
+      return NextResponse.json({
+        period: { from, to },
+        summary,
+        transactions: data
+      });
+    }
+
     return NextResponse.json(data);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
