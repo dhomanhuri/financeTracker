@@ -15,6 +15,7 @@ export default function Home() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [totalAccountBalance, setTotalAccountBalance] = useState(0);
   const [dateRange, setDateRange] = useState({
     from: '',
     to: ''
@@ -45,6 +46,17 @@ export default function Home() {
     try {
       setLoading(true);
       
+      // Fetch total account balance
+      const { data: accountsData } = await supabase
+        .from('accounts')
+        .select('balance')
+        .eq('user_id', user.id);
+      
+      if (accountsData) {
+        const total = accountsData.reduce((sum, acc) => sum + acc.balance, 0);
+        setTotalAccountBalance(total);
+      }
+
       // Check if credentials are placeholders
       if (process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('placeholder') || 
           !process.env.NEXT_PUBLIC_SUPABASE_URL) {
@@ -208,7 +220,7 @@ export default function Home() {
             </div>
           ) : (
             <>
-              <DashboardSummary transactions={transactions} />
+              <DashboardSummary transactions={transactions} totalAccountBalance={totalAccountBalance} />
 
               <div className="mt-16 grid grid-cols-1 lg:grid-cols-12 gap-8">
                 <div className="lg:col-span-4">

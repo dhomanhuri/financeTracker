@@ -5,9 +5,10 @@ import { TrendingDownIcon, WalletIcon, TrendingUpIcon } from 'lucide-react';
 
 interface DashboardSummaryProps {
   transactions: Transaction[];
+  totalAccountBalance?: number;
 }
 
-export default function DashboardSummary({ transactions }: DashboardSummaryProps) {
+export default function DashboardSummary({ transactions, totalAccountBalance }: DashboardSummaryProps) {
   const today = new Date();
   const formattedDate = today.toLocaleDateString('en-US', {
     day: '2-digit',
@@ -24,7 +25,7 @@ export default function DashboardSummary({ transactions }: DashboardSummaryProps
     .filter((t) => t.type === 'expense')
     .reduce((acc, curr) => acc + curr.amount, 0);
 
-  const balance = totalIncome - totalExpense;
+  const balance = totalAccountBalance !== undefined ? totalAccountBalance : (totalIncome - totalExpense);
 
   // Monthly stats
   const currentMonth = today.getMonth();
