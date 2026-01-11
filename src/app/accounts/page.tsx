@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Account, NewAccount } from '@/types';
+import { Account, NewAccount, Stock, NewStock } from '@/types';
 import Navbar from '@/components/Navbar';
 import { 
   PlusIcon, 
@@ -13,7 +13,10 @@ import {
   SmartphoneIcon,
   CreditCardIcon,
   BanknoteIcon,
-  SaveIcon
+  SaveIcon,
+  TrendingUpIcon,
+  RefreshCwIcon,
+  TrendingDownIcon
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -40,16 +43,28 @@ const COLORS = [
 
 export default function AccountsPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [stocks, setStocks] = useState<Stock[]>([]);
+  const [stockPrices, setStockPrices] = useState<Record<string, number>>({});
+  
   const [loading, setLoading] = useState(true);
+  const [stockLoading, setStockLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   
+  const [activeTab, setActiveTab] = useState<'accounts' | 'stocks'>('accounts');
+
   const [formData, setFormData] = useState<NewAccount>({
     name: '',
     balance: 0,
     color: COLORS[0],
     icon: ICONS[0].name
+  });
+
+  const [stockFormData, setStockFormData] = useState<NewStock>({
+    symbol: '',
+    lots: 0,
+    buy_price: 0
   });
 
   useEffect(() => {
@@ -61,8 +76,16 @@ export default function AccountsPage() {
   useEffect(() => {
     if (user?.id) {
       fetchAccounts();
+      fetchStocks();
     }
   }, [user?.id]);
+
+  // Fetch stock prices whenever stocks change
+  useEffect(() => {
+    if (stocks.length > 0) {
+      fetchStockPrices(stocks);
+    }
+  }, [stocks]);
 
   const fetchAccounts = async () => {
     if (!user) return;
@@ -82,6 +105,42 @@ export default function AccountsPage() {
     }
   };
 
+  const fetchStocks = async () => {
+    if (!user) return;
+    try {
+      setStockLoading(true);
+      const { data, error } = await supabase
+        .from('stocks')
+        .select('*')
+        .order('symbol', { ascending: true });
+
+      if (error) throw error;
+      if (data) setStocks(data);
+    } catch (error) {
+      console.error('Error fetching stocks:', error);
+    } finally {
+      setStockLoading(false);
+    }
+  };
+
+  const fetchStockPrices = async (stocksToFetch: Stock[]) => {
+    const prices: Record<string, number> = {};
+    // Fetch prices in parallel
+    await Promise.all(stocksToFetch.map(async (stock) => {
+      try {
+        const res = await fetch(`https://workflows.dhomanhuri.id/webhook/b0150610-6466-462c-a345-d901a8b905b9?emiten=${stock.symbol}`);
+        const data = await res.json();
+        // data is { "nilai": "3680" }
+        if (data && data.nilai) {
+          prices[stock.symbol] = Number(data.nilai);
+        }
+      } catch (e) {
+        console.error(`Failed to fetch price for ${stock.symbol}`, e);
+      }
+    }));
+    setStockPrices(prev => ({ ...prev, ...prices }));
+  };
+
   const addAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) return;
@@ -90,7 +149,7 @@ export default function AccountsPage() {
       setActionLoading(true);
       const { data, error } = await supabase
         .from('accounts')
-        .insert([formData])
+        .insert([{ ...formData, user_id: user?.id }])
         .select()
         .single();
 
@@ -107,6 +166,41 @@ export default function AccountsPage() {
     } catch (error: any) {
       console.error('Error adding account:', error);
       alert(error.code === '23505' ? 'Account already exists!' : 'Failed to add account.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const addStock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stockFormData.symbol.trim()) return;
+
+    try {
+      setActionLoading(true);
+      const { data, error } = await supabase
+        .from('stocks')
+        .insert([{ 
+          ...stockFormData, 
+          symbol: stockFormData.symbol.toUpperCase(),
+          user_id: user?.id 
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      if (data) {
+        setStocks([...stocks, data]);
+        setStockFormData({
+          symbol: '',
+          lots: 0,
+          buy_price: 0
+        });
+        // Fetch price for the new stock
+        fetchStockPrices([data]);
+      }
+    } catch (error: any) {
+      console.error('Error adding stock:', error);
+      alert('Failed to add stock. Symbol might already exist.');
     } finally {
       setActionLoading(false);
     }
@@ -132,13 +226,33 @@ export default function AccountsPage() {
     }
   };
 
+  const deleteStock = async (id: string) => {
+    if (!confirm('Delete this stock from your portfolio?')) return;
+
+    try {
+      setActionLoading(true);
+      const { error } = await supabase
+        .from('stocks')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      setStocks(stocks.filter((s) => s.id !== id));
+    } catch (error) {
+      console.error('Error deleting stock:', error);
+      alert('Failed to delete stock.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const getIcon = (iconName: string) => {
     const iconObj = ICONS.find(i => i.name === iconName);
     const IconComponent = iconObj ? iconObj.icon : WalletIcon;
     return <IconComponent size={20} />;
   };
 
-  if (authLoading || loading) {
+  if (authLoading || (loading && stockLoading)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin" />
@@ -167,10 +281,10 @@ export default function AccountsPage() {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight mb-3">
-                  Accounts <span className="text-accent">Management</span>
+                  Accounts & <span className="text-accent">Portfolio</span>
                 </h1>
                 <p className="text-muted-foreground text-lg max-w-2xl">
-                  Organize your financial sources and track balances across all your accounts in one place.
+                  Manage your cash accounts and stock investments in one place.
                 </p>
               </div>
             </div>
@@ -180,108 +294,207 @@ export default function AccountsPage() {
             {/* Form Section */}
             <div className="lg:col-span-4">
               <div className="glass-card p-8 rounded-[2rem] sticky top-28">
-                <div className="flex items-center gap-3 mb-8">
-                  <div className="w-1.5 h-6 bg-accent rounded-full"></div>
-                  <h2 className="text-xl font-bold text-foreground tracking-tight">Add New Account</h2>
+                {/* Tabs */}
+                <div className="flex p-1 bg-card-bg rounded-xl mb-8 border border-border">
+                  <button
+                    onClick={() => setActiveTab('accounts')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 ${
+                      activeTab === 'accounts'
+                        ? 'bg-accent text-accent-foreground shadow-md'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <WalletIcon size={16} />
+                    Account
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('stocks')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 ${
+                      activeTab === 'stocks'
+                        ? 'bg-accent text-accent-foreground shadow-md'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <TrendingUpIcon size={16} />
+                    Stock
+                  </button>
                 </div>
 
-                <form onSubmit={addAccount} className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">
-                      Account Name
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full bg-card-bg border border-border rounded-2xl px-5 py-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all"
-                      placeholder="e.g. Bank Central, Main Wallet"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">
-                      Initial Balance
-                    </label>
-                    <div className="relative">
-                      <div className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">Rp</div>
-                      <input
-                        type="number"
-                        className="w-full bg-card-bg border border-border rounded-2xl pl-12 pr-5 py-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all tabular-nums"
-                        placeholder="0"
-                        value={formData.balance}
-                        onChange={(e) => setFormData({ ...formData, balance: Number(e.target.value) })}
-                      />
+                {activeTab === 'accounts' ? (
+                  <>
+                    <div className="flex items-center gap-3 mb-8">
+                      <div className="w-1.5 h-6 bg-accent rounded-full"></div>
+                      <h2 className="text-xl font-bold text-foreground tracking-tight">Add New Account</h2>
                     </div>
-                  </div>
 
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">
-                      Theme Color
-                    </label>
-                    <div className="flex flex-wrap gap-3 p-2">
-                      {COLORS.map((color) => (
-                        <button
-                          key={color}
-                          type="button"
-                          className={`w-10 h-10 rounded-full border-4 transition-all duration-300 ${
-                            formData.color === color 
-                              ? 'border-foreground scale-110 shadow-lg' 
-                              : 'border-transparent hover:scale-110'
-                          }`}
-                          style={{ backgroundColor: color, boxShadow: formData.color === color ? `0 0 20px ${color}40` : 'none' }}
-                          onClick={() => setFormData({ ...formData, color })}
+                    <form onSubmit={addAccount} className="space-y-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">
+                          Account Name
+                        </label>
+                        <input
+                          type="text"
+                          className="w-full bg-card-bg border border-border rounded-2xl px-5 py-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all"
+                          placeholder="e.g. Bank Central, Main Wallet"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         />
-                      ))}
-                    </div>
-                  </div>
+                      </div>
 
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">
-                      Account Icon
-                    </label>
-                    <div className="grid grid-cols-5 gap-3">
-                      {ICONS.map((item) => (
-                        <button
-                          key={item.name}
-                          type="button"
-                          className={`aspect-square rounded-2xl border transition-all duration-300 flex items-center justify-center ${
-                            formData.icon === item.name 
-                              ? 'bg-accent border-accent text-accent-foreground shadow-lg shadow-accent/20 scale-105' 
-                              : 'bg-card-bg border-border text-muted-foreground hover:text-foreground hover:bg-accent/10'
-                          }`}
-                          onClick={() => setFormData({ ...formData, icon: item.name })}
-                        >
-                          <item.icon size={20} strokeWidth={2.5} />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">
+                          Initial Balance
+                        </label>
+                        <div className="relative">
+                          <div className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">Rp</div>
+                          <input
+                            type="number"
+                            className="w-full bg-card-bg border border-border rounded-2xl pl-12 pr-5 py-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all tabular-nums"
+                            placeholder="0"
+                            value={formData.balance}
+                            onChange={(e) => setFormData({ ...formData, balance: Number(e.target.value) })}
+                          />
+                        </div>
+                      </div>
 
-                  <button
-                    type="submit"
-                    disabled={actionLoading || !formData.name}
-                    className="w-full bg-accent hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed text-accent-foreground font-bold py-5 px-6 rounded-2xl transition-all flex items-center justify-center gap-3 shadow-xl shadow-accent/20 active:scale-[0.98]"
-                  >
-                    {actionLoading ? (
-                      <div className="w-5 h-5 border-2 border-accent-foreground border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        <SaveIcon size={20} />
-                        Create Account
-                      </>
-                    )}
-                  </button>
-                </form>
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">
+                          Theme Color
+                        </label>
+                        <div className="flex flex-wrap gap-3 p-2">
+                          {COLORS.map((color) => (
+                            <button
+                              key={color}
+                              type="button"
+                              className={`w-10 h-10 rounded-full border-4 transition-all duration-300 ${
+                                formData.color === color 
+                                  ? 'border-foreground scale-110 shadow-lg' 
+                                  : 'border-transparent hover:scale-110'
+                              }`}
+                              style={{ backgroundColor: color, boxShadow: formData.color === color ? `0 0 20px ${color}40` : 'none' }}
+                              onClick={() => setFormData({ ...formData, color })}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">
+                          Account Icon
+                        </label>
+                        <div className="grid grid-cols-5 gap-3">
+                          {ICONS.map((item) => (
+                            <button
+                              key={item.name}
+                              type="button"
+                              className={`aspect-square rounded-2xl border transition-all duration-300 flex items-center justify-center ${
+                                formData.icon === item.name 
+                                  ? 'bg-accent border-accent text-accent-foreground shadow-lg shadow-accent/20 scale-105' 
+                                  : 'bg-card-bg border-border text-muted-foreground hover:text-foreground hover:bg-accent/10'
+                              }`}
+                              onClick={() => setFormData({ ...formData, icon: item.name })}
+                            >
+                              <item.icon size={20} strokeWidth={2.5} />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={actionLoading || !formData.name}
+                        className="w-full bg-accent hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed text-accent-foreground font-bold py-5 px-6 rounded-2xl transition-all flex items-center justify-center gap-3 shadow-xl shadow-accent/20 active:scale-[0.98]"
+                      >
+                        {actionLoading ? (
+                          <div className="w-5 h-5 border-2 border-accent-foreground border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <>
+                            <SaveIcon size={20} />
+                            Create Account
+                          </>
+                        )}
+                      </button>
+                    </form>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-3 mb-8">
+                      <div className="w-1.5 h-6 bg-accent rounded-full"></div>
+                      <h2 className="text-xl font-bold text-foreground tracking-tight">Add Stock</h2>
+                    </div>
+
+                    <form onSubmit={addStock} className="space-y-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">
+                          Stock Symbol (Emiten)
+                        </label>
+                        <input
+                          type="text"
+                          className="w-full bg-card-bg border border-border rounded-2xl px-5 py-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all uppercase"
+                          placeholder="e.g. BBRI, TLKM"
+                          value={stockFormData.symbol}
+                          onChange={(e) => setStockFormData({ ...stockFormData, symbol: e.target.value.toUpperCase() })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">
+                          Lots Owned
+                        </label>
+                        <input
+                          type="number"
+                          className="w-full bg-card-bg border border-border rounded-2xl px-5 py-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all tabular-nums"
+                          placeholder="0"
+                          value={stockFormData.lots || ''}
+                          onChange={(e) => setStockFormData({ ...stockFormData, lots: Number(e.target.value) })}
+                        />
+                        <p className="text-xs text-muted-foreground ml-2">1 Lot = 100 Shares</p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">
+                          Average Buy Price (Per Share)
+                        </label>
+                        <div className="relative">
+                          <div className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">Rp</div>
+                          <input
+                            type="number"
+                            className="w-full bg-card-bg border border-border rounded-2xl pl-12 pr-5 py-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all tabular-nums"
+                            placeholder="0"
+                            value={stockFormData.buy_price || ''}
+                            onChange={(e) => setStockFormData({ ...stockFormData, buy_price: Number(e.target.value) })}
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={actionLoading || !stockFormData.symbol}
+                        className="w-full bg-accent hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed text-accent-foreground font-bold py-5 px-6 rounded-2xl transition-all flex items-center justify-center gap-3 shadow-xl shadow-accent/20 active:scale-[0.98]"
+                      >
+                        {actionLoading ? (
+                          <div className="w-5 h-5 border-2 border-accent-foreground border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <>
+                            <TrendingUpIcon size={20} />
+                            Add Stock
+                          </>
+                        )}
+                      </button>
+                    </form>
+                  </>
+                )}
               </div>
             </div>
 
             {/* List Section */}
-            <div className="lg:col-span-8">
+            <div className="lg:col-span-8 space-y-10">
+              
+              {/* Active Accounts Section */}
               <div className="space-y-6">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
-                    <div className="w-1.5 h-6 bg-accent/50 rounded-full"></div>
+                    <div className="w-1.5 h-6 bg-blue-500 rounded-full"></div>
                     <h2 className="text-xl font-bold text-foreground tracking-tight">Active Accounts</h2>
                   </div>
                   <span className="px-4 py-1.5 bg-card-bg border border-border rounded-full text-xs font-medium text-muted-foreground">
@@ -290,19 +503,12 @@ export default function AccountsPage() {
                 </div>
                 
                 {loading ? (
-                  <div className="glass-card p-20 rounded-[2.5rem] flex flex-col items-center justify-center gap-4">
-                    <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-                    <p className="text-muted-foreground font-medium">Loading your accounts...</p>
+                  <div className="glass-card p-12 rounded-[2.5rem] flex flex-col items-center justify-center gap-4">
+                    <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
                   </div>
                 ) : accounts.length === 0 ? (
-                  <div className="glass-card p-20 rounded-[2.5rem] text-center border-dashed">
-                    <div className="inline-flex p-6 bg-accent/5 rounded-full mb-6 text-muted-foreground">
-                      <WalletIcon size={48} />
-                    </div>
-                    <h3 className="text-2xl font-bold text-foreground mb-3">No Accounts Yet</h3>
-                    <p className="text-muted-foreground max-w-sm mx-auto text-lg">
-                      Start by adding your first account like a bank account, digital wallet, or physical cash.
-                    </p>
+                  <div className="glass-card p-12 rounded-[2.5rem] text-center border-dashed">
+                    <p className="text-muted-foreground font-medium">No accounts yet.</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -340,7 +546,7 @@ export default function AccountsPage() {
                             <MaskedAmount amount={account.balance} />
                           </div>
                         </div>
-
+                        
                         {/* Decorative background element */}
                         <div 
                           className="absolute -right-4 -bottom-4 w-24 h-24 rounded-full blur-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-700 pointer-events-none"
@@ -351,6 +557,139 @@ export default function AccountsPage() {
                   </div>
                 )}
               </div>
+
+              {/* Stock Portfolio Section */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-1.5 h-6 bg-emerald-500 rounded-full"></div>
+                    <h2 className="text-xl font-bold text-foreground tracking-tight">Stock Portfolio</h2>
+                  </div>
+                  <button 
+                    onClick={() => fetchStockPrices(stocks)}
+                    className="flex items-center gap-2 px-4 py-1.5 bg-card-bg border border-border rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors"
+                  >
+                    <RefreshCwIcon size={12} />
+                    Refresh Prices
+                  </button>
+                </div>
+
+                {stockLoading && stocks.length === 0 ? (
+                  <div className="glass-card p-12 rounded-[2.5rem] flex flex-col items-center justify-center gap-4">
+                    <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : stocks.length === 0 ? (
+                  <div className="glass-card p-12 rounded-[2.5rem] text-center border-dashed">
+                    <div className="inline-flex p-4 bg-accent/5 rounded-full mb-4 text-muted-foreground">
+                      <TrendingUpIcon size={32} />
+                    </div>
+                    <h3 className="text-lg font-bold text-foreground mb-2">Empty Portfolio</h3>
+                    <p className="text-muted-foreground max-w-sm mx-auto text-sm">
+                      Add stocks to track your investment performance.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4">
+                    {stocks.map((stock) => {
+                      const currentPrice = stockPrices[stock.symbol] || 0;
+                      const buyValue = stock.lots * 100 * stock.buy_price;
+                      const currentValue = currentPrice ? (stock.lots * 100 * currentPrice) : 0;
+                      const gainLoss = currentValue - buyValue;
+                      const gainLossPercent = buyValue > 0 ? (gainLoss / buyValue) * 100 : 0;
+                      const isProfit = gainLoss >= 0;
+
+                      return (
+                        <div 
+                          key={stock.id}
+                          className="glass-card p-6 rounded-[2rem] hover:bg-accent/5 transition-all duration-500 group relative overflow-hidden"
+                        >
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                            
+                            {/* Left: Symbol & Lots */}
+                            <div className="flex items-center gap-4">
+                              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-black text-xl shadow-inner border border-emerald-500/20">
+                                {stock.symbol.substring(0, 2)}
+                              </div>
+                              <div>
+                                <h3 className="text-2xl font-black text-foreground tracking-tight">{stock.symbol}</h3>
+                                <p className="text-muted-foreground font-medium text-sm">
+                                  {stock.lots} Lot ({stock.lots * 100} Shares)
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Middle: Prices */}
+                            <div className="flex-1 grid grid-cols-2 gap-4 md:border-l md:border-r border-border md:px-8">
+                              <div>
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Buy Price</p>
+                                <p className="text-sm font-semibold text-foreground">
+                                  Rp {stock.buy_price.toLocaleString('id-ID')}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Current</p>
+                                <p className={`text-sm font-semibold ${currentPrice ? 'text-foreground' : 'text-muted-foreground italic'}`}>
+                                  {currentPrice ? `Rp ${currentPrice.toLocaleString('id-ID')}` : 'Loading...'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Buy Value</p>
+                                <p className="text-sm font-semibold text-foreground">
+                                  <MaskedAmount amount={buyValue} />
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Current Value</p>
+                                <p className="text-sm font-semibold text-foreground">
+                                  {currentValue ? <MaskedAmount amount={currentValue} /> : '-'}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Right: Gain/Loss */}
+                            <div className="flex items-center justify-between md:justify-end gap-6 md:min-w-[140px]">
+                              <div className="text-right">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Gain / Loss</p>
+                                <div className={`text-lg font-bold flex items-center justify-end gap-1 ${
+                                  !currentPrice ? 'text-muted-foreground' :
+                                  isProfit ? 'text-emerald-500' : 'text-red-500'
+                                }`}>
+                                  {currentPrice ? (
+                                    <>
+                                      {isProfit ? <TrendingUpIcon size={16} /> : <TrendingDownIcon size={16} />}
+                                      <span>{gainLossPercent.toFixed(2)}%</span>
+                                    </>
+                                  ) : '-'}
+                                </div>
+                                <p className={`text-xs font-medium ${
+                                  !currentPrice ? 'text-muted-foreground' :
+                                  isProfit ? 'text-emerald-500' : 'text-red-500'
+                                }`}>
+                                  {currentPrice ? (
+                                    <>
+                                      {isProfit ? '+' : ''}
+                                      <MaskedAmount amount={gainLoss} />
+                                    </>
+                                  ) : 'Fetching data...'}
+                                </p>
+                              </div>
+                              
+                              <button
+                                onClick={() => deleteStock(stock.id)}
+                                className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                                title="Remove Stock"
+                              >
+                                <Trash2Icon size={18} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
             </div>
           </div>
         </div>

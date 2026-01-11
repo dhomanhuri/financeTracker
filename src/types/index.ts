@@ -35,6 +35,17 @@ export interface Transaction {
 export type NewTransaction = Omit<Transaction, 'id' | 'created_at'>;
 export type NewAccount = Omit<Account, 'id' | 'created_at'>;
 
+export interface Stock {
+  id: string;
+  created_at: string;
+  symbol: string;
+  lots: number;
+  buy_price: number;
+  user_id?: string;
+}
+
+export type NewStock = Omit<Stock, 'id' | 'created_at' | 'user_id'>;
+
 export const TRANSACTION_CATEGORIES = {
   expense: [
     'Makanan & Minuman',

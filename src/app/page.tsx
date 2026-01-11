@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { NewTransaction, Transaction } from '@/types';
+import { NewTransaction, Transaction, Stock } from '@/types';
 import DashboardSummary from '@/components/DashboardSummary';
 import CashFlowChart from '@/components/charts/CashFlowChart';
 import ExpenseCategoryChart from '@/components/charts/ExpenseCategoryChart';
@@ -18,6 +18,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [totalAccountBalance, setTotalAccountBalance] = useState(0);
+  const [totalStockValue, setTotalStockValue] = useState(0);
   const [dateRange, setDateRange] = useState({
     from: '',
     to: ''
@@ -40,8 +41,41 @@ export default function Home() {
   useEffect(() => {
     if (user?.id) {
       fetchTransactions();
+      fetchTotalStockValue();
     }
   }, [user?.id, dateRange]);
+
+  const fetchTotalStockValue = async () => {
+    if (!user) return;
+    try {
+      const { data: stocks } = await supabase
+        .from('stocks')
+        .select('*')
+        .eq('user_id', user.id);
+      
+      if (stocks && stocks.length > 0) {
+         const stockPromises = stocks.map(async (stock) => {
+             try {
+                 const res = await fetch(`https://workflows.dhomanhuri.id/webhook/b0150610-6466-462c-a345-d901a8b905b9?emiten=${stock.symbol}`);
+                 const data = await res.json();
+                 if (data && data.nilai) {
+                     const price = Number(data.nilai);
+                     return stock.lots * 100 * price;
+                 }
+             } catch (e) {
+                 console.error(`Failed to fetch price for ${stock.symbol}`, e);
+             }
+             return 0;
+         });
+
+         const values = await Promise.all(stockPromises);
+         const totalValue = values.reduce((acc, curr) => acc + curr, 0);
+         setTotalStockValue(totalValue);
+      }
+    } catch (error) {
+      console.error('Error fetching stock values:', error);
+    }
+  };
 
   const fetchTransactions = async () => {
     if (!user) return;
@@ -222,7 +256,11 @@ export default function Home() {
             </div>
           ) : (
             <>
-              <DashboardSummary transactions={transactions} totalAccountBalance={totalAccountBalance} />
+              <DashboardSummary 
+                transactions={transactions} 
+                totalAccountBalance={totalAccountBalance} 
+                totalStockValue={totalStockValue}
+              />
 
               {/* Charts Section */}
               <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in">

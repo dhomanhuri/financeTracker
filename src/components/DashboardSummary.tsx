@@ -7,9 +7,10 @@ import MaskedAmount from './MaskedAmount';
 interface DashboardSummaryProps {
   transactions: Transaction[];
   totalAccountBalance?: number;
+  totalStockValue?: number;
 }
 
-export default function DashboardSummary({ transactions, totalAccountBalance }: DashboardSummaryProps) {
+export default function DashboardSummary({ transactions, totalAccountBalance, totalStockValue = 0 }: DashboardSummaryProps) {
   const today = new Date();
   const formattedDate = today.toLocaleDateString('en-US', {
     day: '2-digit',
@@ -26,7 +27,8 @@ export default function DashboardSummary({ transactions, totalAccountBalance }: 
     .filter((t) => t.type === 'expense')
     .reduce((acc, curr) => acc + curr.amount, 0);
 
-  const balance = totalAccountBalance !== undefined ? totalAccountBalance : (totalIncome - totalExpense);
+  const cashBalance = totalAccountBalance !== undefined ? totalAccountBalance : (totalIncome - totalExpense);
+  const netWorth = cashBalance + totalStockValue;
 
   // Monthly stats
   const currentMonth = today.getMonth();
@@ -58,7 +60,7 @@ export default function DashboardSummary({ transactions, totalAccountBalance }: 
             Current Net Worth
           </span>
           <h2 className="text-foreground text-5xl md:text-7xl font-bold tracking-tight mb-4 tabular-nums">
-            <MaskedAmount amount={balance} />
+            <MaskedAmount amount={netWorth} />
           </h2>
           <p className="text-muted-foreground font-medium mb-12">{formattedDate}</p>
           
@@ -98,7 +100,7 @@ export default function DashboardSummary({ transactions, totalAccountBalance }: 
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Savings</span>
           </div>
           <p className="text-muted-foreground text-sm mb-1">Total Savings</p>
-          <p className="text-2xl font-bold text-foreground tabular-nums"><MaskedAmount amount={balance} /></p>
+          <p className="text-2xl font-bold text-foreground tabular-nums"><MaskedAmount amount={cashBalance} /></p>
         </div>
 
         <div className="glass-card p-6 rounded-3xl hover:bg-accent/5 transition-all group border border-border/50">
