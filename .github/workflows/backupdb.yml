@@ -4,7 +4,7 @@ on:
   workflow_dispatch: #enable manual trigger
   schedule:
     # everyday at 00:00
-    - cron: '30 13 * * *'
+    - cron: '38 6 * * *'
 
 jobs:
   run_db_backup:
