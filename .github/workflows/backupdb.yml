@@ -1,0 +1,38 @@
+name: supabaseBackup
+
+on:
+  workflow_dispatch: #enable manual trigger
+  schedule:
+    # everyday at 00:00
+    - cron: '0 0 * * *'
+
+jobs:
+  run_db_backup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Create folder
+        run: mkdir -p databaseBackups
+
+      - name: roles backup
+        run: supabase db dump --db-url "${{ secrets.SUPABASE_CONNECTION_STRING }}" -f databaseBackups/roles.sql --role-only
+
+      - name: schema backup
+        run: supabase db dump --db-url "${{ secrets.SUPABASE_CONNECTION_STRING }}" -f databaseBackups/schema.sql
+
+      - name: data backup
+        run: supabase db dump --db-url "${{ secrets.SUPABASE_CONNECTION_STRING }}" -f databaseBackups/data.sql --data-only --use-copy
+
+      - name: Commit backups
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Automated Supabase Backup
