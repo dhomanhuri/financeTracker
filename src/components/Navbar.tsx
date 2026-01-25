@@ -17,7 +17,8 @@ import {
   MoonIcon,
   TagsIcon,
   LogOutIcon,
-  UserIcon
+  UserIcon,
+  CalculatorIcon
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { usePrivacy } from '@/context/PrivacyContext';
@@ -33,8 +34,11 @@ export default function Navbar() {
     { name: 'Dashboard', icon: LayoutDashboardIcon, href: '/' },
     { name: 'Categories', icon: TagsIcon, href: '/categories' },
     { name: 'Accounts', icon: CreditCardIcon, href: '/accounts' },
+    { name: 'Freedom', icon: CalculatorIcon, href: '/financial-freedom' },
     { name: 'API', icon: Code2Icon, href: '/settings' },
   ];
+
+  const displayedNavItems = user ? navItems : navItems.filter(item => item.href === '/financial-freedom');
 
   return (
     <nav className="sticky top-0 z-50 px-6 py-3 glass border-b border-border">
@@ -93,11 +97,10 @@ export default function Navbar() {
               {theme === 'dark' ? <SunIcon size={20} /> : <MoonIcon size={20} />}
             </button>
             
-            {user && (
+            {user ? (
               <div className="flex items-center gap-3 pl-4 border-l border-border">
                 <div className="hidden lg:flex flex-col items-end">
                   <span className="text-xs text-foreground font-semibold truncate max-w-[120px]">{user.email?.split('@')[0]}</span>
-                  <span className="text-[10px] text-accent font-medium">Pro Plan</span>
                 </div>
                 <button 
                   onClick={() => signOut()}
@@ -107,6 +110,13 @@ export default function Navbar() {
                   <LogOutIcon size={18} />
                 </button>
               </div>
+            ) : (
+              <Link 
+                href="/login" 
+                className="ml-2 px-4 py-2 bg-accent/10 text-accent hover:bg-accent hover:text-accent-foreground rounded-xl text-sm font-bold transition-all border border-accent/20"
+              >
+                Login
+              </Link>
             )}
           </div>
         </div>

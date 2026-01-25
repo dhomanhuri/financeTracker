@@ -3,15 +3,18 @@
 import { useState, useEffect } from 'react';
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import { usePrivacy } from '@/context/PrivacyContext';
+import { useAuth } from '@/context/AuthContext';
 
 interface MaskedAmountProps {
   amount: number;
   className?: string;
   prefix?: string;
+  forceVisible?: boolean;
 }
 
-export default function MaskedAmount({ amount, className = "", prefix = "Rp " }: MaskedAmountProps) {
+export default function MaskedAmount({ amount, className = "", prefix = "Rp ", forceVisible = false }: MaskedAmountProps) {
   const { isMasked: globalIsMasked, verifyAndExecute } = usePrivacy();
+  const { user } = useAuth();
   const [isLocallyUnmasked, setIsLocallyUnmasked] = useState(false);
 
   // If global mask is re-enabled, reset local unmask
@@ -21,7 +24,8 @@ export default function MaskedAmount({ amount, className = "", prefix = "Rp " }:
     }
   }, [globalIsMasked]);
 
-  const isVisible = !globalIsMasked || isLocallyUnmasked;
+  // Logic: Unmasked if forced, OR global unmasked, OR local unmasked, OR user not logged in
+  const isVisible = forceVisible || !globalIsMasked || isLocallyUnmasked || !user;
 
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering parent clicks (like row selection)
@@ -45,7 +49,7 @@ export default function MaskedAmount({ amount, className = "", prefix = "Rp " }:
   // If global is masked, everything is masked by default, but can be locally unmasked.
 
   const displayValue = isVisible 
-    ? `${prefix}${amount.toLocaleString('id-ID')}`
+    ? `${prefix}${amount.toLocaleString('id-ID', { maximumFractionDigits: 0 })}`
     : '••••••••••';
 
   return (

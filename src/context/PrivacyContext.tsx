@@ -14,10 +14,19 @@ interface PrivacyContextType {
 const PrivacyContext = createContext<PrivacyContextType | undefined>(undefined);
 
 export function PrivacyProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
   const [isMasked, setIsMasked] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const pendingActionRef = useRef<(() => void) | null>(null);
-  const { user } = useAuth();
+
+  // If user is not logged in, force unmasked
+  React.useEffect(() => {
+    if (!user) {
+      setIsMasked(false);
+    } else {
+      setIsMasked(true); // Or retrieve from persistent storage
+    }
+  }, [user]);
 
   const verifyPassword = async (password: string) => {
     if (!user?.email) throw new Error('User not found');

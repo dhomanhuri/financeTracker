@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { WalletIcon, MailIcon, LockIcon, ArrowRightIcon } from 'lucide-react';
+import Link from 'next/link';
+import { WalletIcon, MailIcon, LockIcon, ArrowRightIcon, CalculatorIcon } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
@@ -138,18 +139,26 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-10 pt-8 border-t border-white/5 text-center">
+          <div className="mt-10 pt-8 border-t border-white/5 text-center space-y-4">
             <button
               onClick={() => {
                 setIsRegister(!isRegister);
                 setError(null);
               }}
-              className="text-gray-500 hover:text-accent transition-colors text-sm font-semibold tracking-wide"
+              className="text-gray-500 hover:text-accent transition-colors text-sm font-semibold tracking-wide block w-full"
             >
               {isRegister 
                 ? 'Already have an account? Sign in' 
                 : "Don't have an account? Create one now"}
             </button>
+
+            <Link 
+              href="/financial-freedom"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-accent/5 hover:bg-accent/10 text-accent transition-all text-sm font-bold border border-accent/10 hover:border-accent/20"
+            >
+              <CalculatorIcon size={16} />
+              Calculate Financial Freedom (Guest Mode)
+            </Link>
           </div>
         </div>
         
