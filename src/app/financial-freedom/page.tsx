@@ -32,6 +32,7 @@ export default function FinancialFreedomPage() {
 
   // Inputs
   const [inputs, setInputs] = useState({
+    initialSavings: 0,
     monthlySavings: 1000000,
     returnRate: 10, // % per year
     monthlyExpenses: 5000000,
@@ -44,7 +45,12 @@ export default function FinancialFreedomPage() {
     const saved = localStorage.getItem('ff_calculator_inputs');
     if (saved) {
       try {
-        setInputs(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        setInputs(prev => ({
+          ...prev,
+          ...parsed,
+          initialSavings: parsed.initialSavings || 0
+        }));
       } catch (e) {
         console.error('Failed to parse saved inputs', e);
       }
@@ -75,6 +81,7 @@ export default function FinancialFreedomPage() {
 
       if (data) {
         setInputs({
+          initialSavings: Number(data.initial_savings || 0),
           monthlySavings: Number(data.monthly_savings),
           returnRate: Number(data.return_rate),
           monthlyExpenses: Number(data.monthly_expenses),
@@ -95,6 +102,7 @@ export default function FinancialFreedomPage() {
         .from('financial_freedom_entries')
         .insert([{
           user_id: user.id,
+          initial_savings: inputs.initialSavings,
           monthly_savings: inputs.monthlySavings,
           annual_savings: inputs.monthlySavings * 12,
           return_rate: inputs.returnRate,
@@ -126,7 +134,7 @@ export default function FinancialFreedomPage() {
     const targetAmount = annualExpenses / 0.03; 
 
     const projection = [];
-    let currentBalance = 0;
+    let currentBalance = inputs.initialSavings;
     let year = 0;
     const maxYears = 50; // Cap at 50 years to avoid infinite loops
 
@@ -213,6 +221,22 @@ export default function FinancialFreedomPage() {
                 </div>
 
                 <div className="space-y-6">
+                  {/* Initial Savings (Optional) */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">
+                      Initial Savings (Optional)
+                    </label>
+                    <div className="relative">
+                      <div className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">Rp</div>
+                      <input
+                        type="number"
+                        className="w-full bg-card-bg border border-border rounded-2xl pl-12 pr-5 py-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all tabular-nums"
+                        value={inputs.initialSavings}
+                        onChange={(e) => setInputs({ ...inputs, initialSavings: Number(e.target.value) })}
+                      />
+                    </div>
+                  </div>
+
                   {/* Monthly Savings */}
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">
