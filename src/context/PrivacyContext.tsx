@@ -18,13 +18,16 @@ export function PrivacyProvider({ children }: { children: ReactNode }) {
   const [isMasked, setIsMasked] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const pendingActionRef = useRef<(() => void) | null>(null);
+  const prevUserIdRef = useRef<string | undefined>(undefined);
 
-  // If user is not logged in, force unmasked
+  // If user is not logged in, force unmasked. Only mask on fresh login.
   React.useEffect(() => {
     if (!user) {
       setIsMasked(false);
-    } else {
-      setIsMasked(true); // Or retrieve from persistent storage
+      prevUserIdRef.current = undefined;
+    } else if (user.id !== prevUserIdRef.current) {
+      setIsMasked(true); 
+      prevUserIdRef.current = user.id;
     }
   }, [user]);
 
@@ -40,12 +43,17 @@ export function PrivacyProvider({ children }: { children: ReactNode }) {
   };
 
   const handlePasswordSubmit = async (password: string) => {
-    await verifyPassword(password);
-    setIsModalOpen(false);
-    
-    if (pendingActionRef.current) {
-      pendingActionRef.current();
-      pendingActionRef.current = null;
+    try {
+      await verifyPassword(password);
+      setIsModalOpen(false);
+      
+      // Execute the pending action immediately after successful verification
+      if (pendingActionRef.current) {
+        pendingActionRef.current();
+        pendingActionRef.current = null;
+      }
+    } catch (error) {
+      throw error; // Re-throw to be caught by PasswordModal
     }
   };
 

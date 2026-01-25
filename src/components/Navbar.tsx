@@ -18,7 +18,8 @@ import {
   TagsIcon,
   LogOutIcon,
   UserIcon,
-  CalculatorIcon
+  CalculatorIcon,
+  MessageCircleIcon
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { usePrivacy } from '@/context/PrivacyContext';
@@ -96,6 +97,16 @@ export default function Navbar() {
             >
               {theme === 'dark' ? <SunIcon size={20} /> : <MoonIcon size={20} />}
             </button>
+
+            <a 
+              href="https://www.instagram.com/dhomanhuri/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="p-2 text-pink-500 hover:text-pink-400 hover:bg-pink-500/10 rounded-lg transition-all"
+              title="Report / Comment on Instagram"
+            >
+              <MessageCircleIcon size={20} />
+            </a>
             
             {user ? (
               <div className="flex items-center gap-3 pl-4 border-l border-border">

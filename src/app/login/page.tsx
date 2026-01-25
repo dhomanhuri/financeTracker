@@ -163,8 +163,33 @@ export default function LoginPage() {
         </div>
         
         <p className="text-center mt-10 text-gray-600 text-[10px] font-bold uppercase tracking-[0.3em]">
-          Powered by Supabase & Next.js
-        </p>
+            Powered by Muhammad Dhomanhuri Malik Illyas
+          </p>
+
+          {/* Demo Account Badge - Bottom */}
+          {!isRegister && (
+            <div className="mt-8 flex justify-center animate-fade-in">
+              <div className="inline-flex flex-col items-center bg-accent/5 border border-accent/10 rounded-xl p-3">
+                <span className="text-[10px] font-bold text-accent uppercase tracking-widest mb-1">Demo Account</span>
+                <div className="text-xs text-gray-400 font-mono flex flex-col gap-0.5 text-center">
+                  <span>Email: demo@gmail.com</span>
+                  <span>Pass: demo1234</span>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div className="flex justify-center mt-4">
+            <a 
+              href="https://www.instagram.com/dhomanhuri/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-pink-500/10 text-pink-500 hover:bg-pink-500/20 transition-colors text-xs font-bold"
+            >
+              <CalculatorIcon size={14} className="rotate-12" />
+              <span>Report / Comment</span>
+            </a>
+          </div>
       </div>
     </main>
   );
