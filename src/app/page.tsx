@@ -56,7 +56,7 @@ export default function Home() {
       if (stocks && stocks.length > 0) {
          const stockPromises = stocks.map(async (stock) => {
              try {
-                 const res = await fetch(`https://workflows.dhomanhuri.id/webhook/b0150610-6466-462c-a345-d901a8b905b9?emiten=${stock.symbol}`);
+                 const res = await fetch(`https://workflows.dhomanhuri.id/webhook/1f45a32f-3113-4821-a2eb-551db0a6e804?emiten=${stock.symbol}`);
                  const data = await res.json();
                  if (data && data.nilai) {
                      const price = Number(data.nilai);
