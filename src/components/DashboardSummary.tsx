@@ -98,9 +98,9 @@ export default function DashboardSummary({ transactions, totalAccountBalance, to
             <div className="p-3 bg-accent/10 rounded-2xl text-accent group-hover:scale-110 transition-transform">
               <WalletIcon size={24} />
             </div>
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Savings</span>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Cash</span>
           </div>
-          <p className="text-muted-foreground text-sm mb-1">Total Savings</p>
+          <p className="text-muted-foreground text-sm mb-1">Cash Balance</p>
           <p className="text-2xl font-bold text-foreground tabular-nums"><MaskedAmount amount={cashBalance} /></p>
         </div>
 
