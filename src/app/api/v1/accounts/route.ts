@@ -13,11 +13,11 @@ export async function POST(req: Request) {
   const auth = await validateApiKey(req);
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
   const { userId } = auth;
-  const { name, balance = 0, color = '#3b82f6', icon = 'Wallet' } = await req.json();
+  const { name, balance = 0, color = '#3b82f6', icon = 'Wallet', notes } = await req.json();
 
   const result = await query(
-    `INSERT INTO accounts (user_id, name, balance, color, icon) VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-    [userId, name, balance, color, icon]
+    `INSERT INTO accounts (user_id, name, balance, color, icon, notes) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+    [userId, name, balance, color, icon, notes || null]
   );
   return NextResponse.json(result.rows[0], { status: 201 });
 }

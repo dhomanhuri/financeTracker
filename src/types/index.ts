@@ -12,6 +12,7 @@ export interface Account {
   balance: number;
   color: string;
   icon: string;
+  notes?: string | null;
 }
 
 export interface Transaction {
@@ -33,7 +34,7 @@ export interface Transaction {
 }
 
 export type NewTransaction = Omit<Transaction, 'id' | 'created_at'>;
-export type NewAccount = Omit<Account, 'id' | 'created_at'>;
+export type NewAccount = Omit<Account, 'id' | 'created_at'> & { notes?: string | null };
 
 export interface Stock {
   id: string;

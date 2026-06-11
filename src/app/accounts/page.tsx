@@ -59,7 +59,8 @@ export default function AccountsPage() {
     name: '',
     balance: 0,
     color: COLORS[0],
-    icon: ICONS[0].name
+    icon: ICONS[0].name,
+    notes: '',
   });
 
   const [stockFormData, setStockFormData] = useState<NewStock>({
@@ -144,7 +145,7 @@ export default function AccountsPage() {
       }).then(r => r.json());
       if (data.error) throw new Error(data.error);
       setAccounts([...accounts, data]);
-      setFormData({ name: '', balance: 0, color: COLORS[0], icon: ICONS[0].name });
+      setFormData({ name: '', balance: 0, color: COLORS[0], icon: ICONS[0].name, notes: '' });
     } catch (error: unknown) {
       alert(error instanceof Error ? error.message : 'Failed to add account.');
     } finally {
@@ -308,6 +309,19 @@ export default function AccountsPage() {
                             onChange={(e) => setFormData({ ...formData, balance: Number(e.target.value) })}
                           />
                         </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">
+                          Notes <span className="normal-case text-muted-foreground/50">(opsional)</span>
+                        </label>
+                        <textarea
+                          rows={2}
+                          placeholder="contoh: rekening utama, dompet harian..."
+                          className="w-full bg-card-bg border border-border rounded-2xl px-5 py-3 text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all resize-none text-sm"
+                          value={formData.notes || ''}
+                          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        />
                       </div>
 
                       <div className="space-y-3">
@@ -492,9 +506,12 @@ export default function AccountsPage() {
                         </div>
 
                         <div>
-                          <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-accent transition-colors">
+                          <h3 className="text-xl font-bold text-foreground mb-1 group-hover:text-accent transition-colors">
                             {account.name}
                           </h3>
+                          {account.notes && (
+                            <p className="text-xs text-muted-foreground/60 italic mb-2">{account.notes}</p>
+                          )}
                           <div className="text-3xl font-bold text-foreground tracking-tight tabular-nums">
                             <MaskedAmount amount={account.balance} />
                           </div>

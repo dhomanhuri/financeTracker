@@ -8,12 +8,12 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const { userId } = auth;
 
   const body = await req.json();
-  const { name, balance, color, icon } = body;
+  const { name, balance, color, icon, notes } = body;
 
   const result = await query(
-    `UPDATE accounts SET name=$1, balance=$2, color=$3, icon=$4
-     WHERE id=$5 AND user_id=$6 RETURNING *`,
-    [name, balance, color, icon, (await params).id, userId]
+    `UPDATE accounts SET name=$1, balance=$2, color=$3, icon=$4, notes=$5
+     WHERE id=$6 AND user_id=$7 RETURNING *`,
+    [name, balance, color, icon, notes ?? null, (await params).id, userId]
   );
   if (!result.rows[0]) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json(result.rows[0]);
