@@ -11,3 +11,16 @@ services:
       - .env
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrate
+    container_name: fintrack-migrate
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

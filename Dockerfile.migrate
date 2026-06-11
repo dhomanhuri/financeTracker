@@ -1,0 +1,12 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY src/sequelize ./src/sequelize
+COPY .sequelizerc .
+COPY .env* ./
+
+CMD ["npx", "sequelize-cli", "db:migrate"]
