@@ -13,7 +13,7 @@ export async function GET(req: Request) {
       [userId]
     );
 
-    const totalBalance = accounts.rows.reduce((sum, a) => sum + parseFloat(a.balance), 0);
+    const totalBalance = accounts.rows.reduce((sum, a) => sum + (isNaN(parseFloat(a.balance)) ? 0 : parseFloat(a.balance)), 0);
 
     const transactions = await query(
       `SELECT t.*,

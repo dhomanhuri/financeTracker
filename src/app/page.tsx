@@ -83,7 +83,7 @@ export default function Home() {
       // Fetch total account balance
       const accountsData = await fetch('/api/v1/accounts').then(r => r.json());
       if (Array.isArray(accountsData)) {
-        const total = accountsData.reduce((sum: number, acc: {balance: number}) => sum + acc.balance, 0);
+        const total = accountsData.reduce((sum: number, acc: {balance: unknown}) => sum + Number(acc.balance), 0);
         setTotalAccountBalance(total);
       }
 
