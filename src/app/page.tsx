@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+// supabase removed
 import { NewTransaction, Transaction, Stock } from '@/types';
 import DashboardSummary from '@/components/DashboardSummary';
 import CashFlowChart from '@/components/charts/CashFlowChart';
@@ -48,13 +48,10 @@ export default function Home() {
   const fetchTotalStockValue = async () => {
     if (!user) return;
     try {
-      const { data: stocks } = await supabase
-        .from('stocks')
-        .select('*')
-        .eq('user_id', user.id);
+      const stocks = await fetch('/api/v1/stocks').then(r => r.json());
       
       if (stocks && stocks.length > 0) {
-         const stockPromises = stocks.map(async (stock) => {
+         const stockPromises = stocks.map(async (stock: { symbol: string; lots: number }) => {
              try {
                  const res = await fetch(`https://workflows.dhomanhuri.id/webhook/1f45a32f-3113-4821-a2eb-551db0a6e804?emiten=${stock.symbol}`);
                  const data = await res.json();
@@ -81,59 +78,30 @@ export default function Home() {
     if (!user) return;
     try {
       setLoading(true);
-      
+
       // Fetch total account balance
-      const { data: accountsData } = await supabase
-        .from('accounts')
-        .select('balance')
-        .eq('user_id', user.id);
-      
-      if (accountsData) {
-        const total = accountsData.reduce((sum, acc) => sum + acc.balance, 0);
+      const accountsData = await fetch('/api/v1/accounts').then(r => r.json());
+      if (Array.isArray(accountsData)) {
+        const total = accountsData.reduce((sum: number, acc: {balance: number}) => sum + acc.balance, 0);
         setTotalAccountBalance(total);
       }
 
-      // Check if credentials are placeholders
-      if (process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('placeholder') || 
-          !process.env.NEXT_PUBLIC_SUPABASE_URL) {
-        console.warn('Supabase credentials not configured');
-        setLoading(false);
-        return;
+      // Fetch transactions
+      const params: Record<string, string> = {};
+      if (dateRange.from) params.from = dateRange.from;
+      if (dateRange.to)   params.to   = dateRange.to;
+      const qs = Object.keys(params).length ? '?' + new URLSearchParams(params).toString() : '';
+      const txResult = await fetch(`/api/v1/transactions${qs}`).then(r => r.json());
+
+      let data: Transaction[] = [];
+      if (dateRange.from || dateRange.to) {
+        data = txResult.transactions || [];
+        if (txResult.summary) setPeriodSummary(txResult.summary);
+      } else {
+        data = Array.isArray(txResult) ? txResult : [];
+        setPeriodSummary(null);
       }
-
-      let query = supabase
-        .from('transactions')
-        .select('*, accounts(name, color), categories(name)')
-        .eq('user_id', user.id);
-
-      if (dateRange.from) query = query.gte('date', dateRange.from);
-      if (dateRange.to) query = query.lte('date', dateRange.to);
-
-      const { data, error } = await query
-        .order('date', { ascending: false })
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      if (data) {
-        setTransactions(data);
-        
-        // Calculate period summary if filters are active
-        if (dateRange.from || dateRange.to) {
-          const summary = data.reduce((acc, tx) => {
-            if (tx.type === 'income') acc.total_income += tx.amount;
-            else acc.total_expense += tx.amount;
-            return acc;
-          }, { total_income: 0, total_expense: 0 });
-          
-          setPeriodSummary({
-            ...summary,
-            net_change: summary.total_income - summary.total_expense
-          });
-        } else {
-          setPeriodSummary(null);
-        }
-      }
+      setTransactions(data);
     } catch (error: any) {
       console.error('Error fetching transactions:', error);
       if (error?.code === 'PGRST116' || error?.message?.includes('relation "transactions" does not exist')) {
@@ -151,84 +119,33 @@ export default function Home() {
   const addTransaction = async (newTransaction: NewTransaction) => {
     try {
       setActionLoading(true);
-      
-      // 1. Insert transaction
-      const { data, error } = await supabase
-        .from('transactions')
-        .insert([newTransaction])
-        .select('*, accounts(name, color), categories(name)')
-        .single();
-
-      if (error) throw error;
-
-      // 2. Update account balance if account_id is provided
-      if (newTransaction.account_id) {
-        const adjustment = newTransaction.type === 'income' ? newTransaction.amount : -newTransaction.amount;
-        
-        // Fetch current balance
-        const { data: account } = await supabase
-          .from('accounts')
-          .select('balance')
-          .eq('id', newTransaction.account_id)
-          .single();
-
-        if (account) {
-          await supabase
-            .from('accounts')
-            .update({ balance: account.balance + adjustment })
-            .eq('id', newTransaction.account_id);
-        }
-      }
-
-      if (data) {
-        setTransactions([data, ...transactions]);
-      }
+      const data = await fetch('/api/v1/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTransaction),
+      }).then(r => r.json());
+      if (data.error) throw new Error(data.error);
+      setTransactions([data, ...transactions]);
+      // Refresh balance
+      fetchTransactions();
     } catch (error) {
       console.error('Error adding transaction:', error);
-      alert('Failed to add transaction. Please ensure Supabase connection is correct.');
+      alert('Gagal menambahkan transaksi.');
     } finally {
       setActionLoading(false);
     }
   };
 
   const deleteTransaction = async (id: string) => {
-    const transactionToDelete = transactions.find(t => t.id === id);
-    if (!transactionToDelete || !confirm('Are you sure you want to delete this transaction?')) return;
-
+    if (!confirm('Yakin hapus transaksi ini?')) return;
     try {
       setActionLoading(true);
-
-      // 1. Delete transaction
-      const { error } = await supabase
-        .from('transactions')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      // 2. Revert account balance if account_id was provided
-      if (transactionToDelete.account_id) {
-        const adjustment = transactionToDelete.type === 'income' ? -transactionToDelete.amount : transactionToDelete.amount;
-        
-        // Fetch current balance
-        const { data: account } = await supabase
-          .from('accounts')
-          .select('balance')
-          .eq('id', transactionToDelete.account_id)
-          .single();
-
-        if (account) {
-          await supabase
-            .from('accounts')
-            .update({ balance: account.balance + adjustment })
-            .eq('id', transactionToDelete.account_id);
-        }
-      }
-
-      setTransactions(transactions.filter((t) => t.id !== id));
+      await fetch(`/api/v1/transactions/${id}`, { method: 'DELETE' });
+      setTransactions(transactions.filter(t => t.id !== id));
+      fetchTransactions();
     } catch (error) {
       console.error('Error deleting transaction:', error);
-      alert('Failed to delete transaction.');
+      alert('Gagal menghapus transaksi.');
     } finally {
       setActionLoading(false);
     }

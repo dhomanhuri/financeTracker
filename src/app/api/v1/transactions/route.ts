@@ -1,125 +1,94 @@
 import { NextResponse } from 'next/server';
 import { validateApiKey } from '@/lib/api-auth';
+import { query } from '@/lib/db';
 
 export async function GET(req: Request) {
   const auth = await validateApiKey(req);
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
-  const { userId, userClient } = auth;
+  const { userId } = auth;
 
   const { searchParams } = new URL(req.url);
-  const limit = parseInt(searchParams.get('limit') || '20');
+  const limit  = parseInt(searchParams.get('limit')  || '20');
   const offset = parseInt(searchParams.get('offset') || '0');
-  const from = searchParams.get('from');
-  const to = searchParams.get('to');
+  const from   = searchParams.get('from');
+  const to     = searchParams.get('to');
 
   try {
-    let query = userClient
-      .from('transactions')
-      .select(`
-        *,
-        categories(name, type),
-        accounts(name, color)
-      `)
-      .eq('user_id', userId);
+    let sql = `
+      SELECT t.*,
+             c.name AS category_name, c.type AS category_type,
+             a.name AS account_name,  a.color AS account_color
+      FROM transactions t
+      LEFT JOIN categories c ON t.category_id = c.id
+      LEFT JOIN accounts   a ON t.account_id  = a.id
+      WHERE t.user_id = $1
+    `;
+    const params: unknown[] = [userId];
+    let idx = 2;
 
-    if (from) query = query.gte('date', from);
-    if (to) query = query.lte('date', to);
+    if (from) { sql += ` AND t.date >= $${idx++}`; params.push(from); }
+    if (to)   { sql += ` AND t.date <= $${idx++}`; params.push(to);   }
 
-    const { data, error } = await query
-      .order('date', { ascending: false })
-      .range(offset, offset + limit - 1);
+    sql += ` ORDER BY t.date DESC, t.created_at DESC LIMIT $${idx++} OFFSET $${idx++}`;
+    params.push(limit, offset);
 
-    if (error) throw error;
+    const result = await query(sql, params);
 
-    // If period filter is applied, calculate summary for that period
     if (from || to) {
-      let summaryQuery = userClient
-        .from('transactions')
-        .select('amount, type')
-        .eq('user_id', userId);
-      
-      if (from) summaryQuery = summaryQuery.gte('date', from);
-      if (to) summaryQuery = summaryQuery.lte('date', to);
+      const sumResult = await query(
+        `SELECT type, SUM(amount) AS total
+         FROM transactions
+         WHERE user_id = $1 ${from ? 'AND date >= $2' : ''} ${to ? `AND date <= $${from ? 3 : 2}` : ''}
+         GROUP BY type`,
+        [userId, ...(from ? [from] : []), ...(to ? [to] : [])]
+      );
 
-      const { data: summaryData } = await summaryQuery;
-      
-      const summary = {
-        total_income: 0,
-        total_expense: 0,
-        net_change: 0,
-        transaction_count: data?.length || 0
-      };
-
-      summaryData?.forEach(tx => {
-        if (tx.type === 'income') summary.total_income += tx.amount;
-        else summary.total_expense += tx.amount;
+      const summary = { total_income: 0, total_expense: 0, net_change: 0 };
+      sumResult.rows.forEach(r => {
+        if (r.type === 'income')  summary.total_income  = parseFloat(r.total);
+        else                      summary.total_expense = parseFloat(r.total);
       });
       summary.net_change = summary.total_income - summary.total_expense;
 
-      return NextResponse.json({
-        period: { from, to },
-        summary,
-        transactions: data
-      });
+      return NextResponse.json({ period: { from, to }, summary, transactions: result.rows });
     }
 
-    return NextResponse.json(data);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(result.rows);
+  } catch (error: unknown) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error' }, { status: 500 });
   }
 }
 
 export async function POST(req: Request) {
   const auth = await validateApiKey(req);
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
-  const { userId, userClient } = auth;
+  const { userId } = auth;
 
   try {
     const body = await req.json();
     const { amount, type, category_id, account_id, title, description, date } = body;
-    
-    // Use title if provided, otherwise fallback to description
     const transactionTitle = title || description;
 
-    // Basic validation
     if (!amount || !type || !category_id || !account_id || !transactionTitle) {
-      return NextResponse.json({ error: 'Missing required fields (amount, type, category_id, account_id, title/description)' }, { status: 400 });
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // 1. Insert transaction
-    const { data: transaction, error: txError } = await userClient
-      .from('transactions')
-      .insert([{
-        user_id: userId,
-        amount,
-        type,
-        category_id,
-        account_id,
-        title: transactionTitle,
-        date: date || new Date().toISOString().split('T')[0]
-      }])
-      .select()
-      .single();
+    const result = await query(
+      `INSERT INTO transactions (user_id, amount, type, category_id, account_id, title, date)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [userId, amount, type, category_id, account_id, transactionTitle, date || new Date().toISOString().split('T')[0]]
+    );
 
-    if (txError) throw txError;
-
-    // 2. Update account balance
+    // Update account balance
     const adjustment = type === 'income' ? amount : -amount;
-    const { data: account } = await userClient
-      .from('accounts')
-      .select('balance')
-      .eq('id', account_id)
-      .single();
+    await query(
+      `UPDATE accounts SET balance = balance + $1 WHERE id = $2 AND user_id = $3`,
+      [adjustment, account_id, userId]
+    );
 
-    if (account) {
-      await userClient
-        .from('accounts')
-        .update({ balance: account.balance + adjustment })
-        .eq('id', account_id);
-    }
-
-    return NextResponse.json(transaction);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(result.rows[0]);
+  } catch (error: unknown) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error' }, { status: 500 });
   }
 }

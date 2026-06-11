@@ -1,26 +1,23 @@
 import { NextResponse } from 'next/server';
 import { validateApiKey } from '@/lib/api-auth';
+import { query } from '@/lib/db';
 
 export async function GET(req: Request) {
   const auth = await validateApiKey(req);
-  
-  if ('error' in auth) {
-    return NextResponse.json({ error: auth.error }, { status: auth.status });
-  }
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  const result = await query('SELECT * FROM accounts WHERE user_id=$1 ORDER BY name', [auth.userId]);
+  return NextResponse.json(result.rows);
+}
 
-  const { userId, userClient } = auth;
+export async function POST(req: Request) {
+  const auth = await validateApiKey(req);
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  const { userId } = auth;
+  const { name, balance = 0, color = '#3b82f6', icon = 'Wallet' } = await req.json();
 
-  try {
-    const { data: accounts, error } = await userClient
-      .from('accounts')
-      .select('*')
-      .eq('user_id', userId)
-      .order('name');
-
-    if (error) throw error;
-
-    return NextResponse.json(accounts);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+  const result = await query(
+    `INSERT INTO accounts (user_id, name, balance, color, icon) VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+    [userId, name, balance, color, icon]
+  );
+  return NextResponse.json(result.rows[0], { status: 201 });
 }

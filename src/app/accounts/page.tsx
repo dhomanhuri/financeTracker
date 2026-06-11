@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+// supabase removed
 import { Account, NewAccount, Stock, NewStock } from '@/types';
 import Navbar from '@/components/Navbar';
 import { 
@@ -91,13 +91,8 @@ export default function AccountsPage() {
     if (!user) return;
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('accounts')
-        .select('*')
-        .order('name', { ascending: true });
-
-      if (error) throw error;
-      if (data) setAccounts(data);
+      const data = await fetch('/api/v1/accounts').then(r => r.json());
+      if (Array.isArray(data)) setAccounts(data);
     } catch (error) {
       console.error('Error fetching accounts:', error);
     } finally {
@@ -109,13 +104,8 @@ export default function AccountsPage() {
     if (!user) return;
     try {
       setStockLoading(true);
-      const { data, error } = await supabase
-        .from('stocks')
-        .select('*')
-        .order('symbol', { ascending: true });
-
-      if (error) throw error;
-      if (data) setStocks(data);
+      const data = await fetch('/api/v1/stocks').then(r => r.json());
+      if (Array.isArray(data)) setStocks(data);
     } catch (error) {
       console.error('Error fetching stocks:', error);
     } finally {
@@ -144,28 +134,18 @@ export default function AccountsPage() {
   const addAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) return;
-
     try {
       setActionLoading(true);
-      const { data, error } = await supabase
-        .from('accounts')
-        .insert([{ ...formData, user_id: user?.id }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      if (data) {
-        setAccounts([...accounts, data]);
-        setFormData({
-          name: '',
-          balance: 0,
-          color: COLORS[0],
-          icon: ICONS[0].name
-        });
-      }
-    } catch (error: any) {
-      console.error('Error adding account:', error);
-      alert(error.code === '23505' ? 'Account already exists!' : 'Failed to add account.');
+      const data = await fetch('/api/v1/accounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      }).then(r => r.json());
+      if (data.error) throw new Error(data.error);
+      setAccounts([...accounts, data]);
+      setFormData({ name: '', balance: 0, color: COLORS[0], icon: ICONS[0].name });
+    } catch (error: unknown) {
+      alert(error instanceof Error ? error.message : 'Failed to add account.');
     } finally {
       setActionLoading(false);
     }
@@ -174,52 +154,31 @@ export default function AccountsPage() {
   const addStock = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stockFormData.symbol.trim()) return;
-
     try {
       setActionLoading(true);
-      const { data, error } = await supabase
-        .from('stocks')
-        .insert([{ 
-          ...stockFormData, 
-          symbol: stockFormData.symbol.toUpperCase(),
-          user_id: user?.id 
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      if (data) {
-        setStocks([...stocks, data]);
-        setStockFormData({
-          symbol: '',
-          lots: 0,
-          buy_price: 0
-        });
-        // Fetch price for the new stock
-        fetchStockPrices([data]);
-      }
-    } catch (error: any) {
-      console.error('Error adding stock:', error);
-      alert('Failed to add stock. Symbol might already exist.');
+      const data = await fetch('/api/v1/stocks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(stockFormData),
+      }).then(r => r.json());
+      if (data.error) throw new Error(data.error);
+      setStocks([...stocks, data]);
+      setStockFormData({ symbol: '', lots: 0, buy_price: 0 });
+      fetchStockPrices([data]);
+    } catch (error: unknown) {
+      alert(error instanceof Error ? error.message : 'Failed to add stock.');
     } finally {
       setActionLoading(false);
     }
   };
 
   const deleteAccount = async (id: string) => {
-    if (!confirm('Delete this account? All connected transactions will lose their account reference.')) return;
-
+    if (!confirm('Delete this account?')) return;
     try {
       setActionLoading(true);
-      const { error } = await supabase
-        .from('accounts')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      setAccounts(accounts.filter((a) => a.id !== id));
+      await fetch(`/api/v1/accounts/${id}`, { method: 'DELETE' });
+      setAccounts(accounts.filter(a => a.id !== id));
     } catch (error) {
-      console.error('Error deleting account:', error);
       alert('Failed to delete account.');
     } finally {
       setActionLoading(false);
@@ -227,19 +186,12 @@ export default function AccountsPage() {
   };
 
   const deleteStock = async (id: string) => {
-    if (!confirm('Delete this stock from your portfolio?')) return;
-
+    if (!confirm('Delete this stock?')) return;
     try {
       setActionLoading(true);
-      const { error } = await supabase
-        .from('stocks')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      setStocks(stocks.filter((s) => s.id !== id));
+      await fetch(`/api/v1/stocks/${id}`, { method: 'DELETE' });
+      setStocks(stocks.filter(s => s.id !== id));
     } catch (error) {
-      console.error('Error deleting stock:', error);
       alert('Failed to delete stock.');
     } finally {
       setActionLoading(false);

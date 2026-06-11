@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useRef, ReactNode } from 'react';
-import { supabase } from '@/lib/supabase';
+// supabase removed
 import { useAuth } from './AuthContext';
 import PasswordModal from '@/components/PasswordModal';
 
@@ -34,12 +34,15 @@ export function PrivacyProvider({ children }: { children: ReactNode }) {
   const verifyPassword = async (password: string) => {
     if (!user?.email) throw new Error('User not found');
 
-    const { error } = await supabase.auth.signInWithPassword({
+    // Verifikasi password via NextAuth credentials endpoint
+    const { signIn } = await import('next-auth/react');
+    const result = await signIn('credentials', {
       email: user.email,
-      password: password,
+      password,
+      redirect: false,
     });
 
-    if (error) throw error;
+    if (result?.error) throw new Error('Password salah');
   };
 
   const handlePasswordSubmit = async (password: string) => {

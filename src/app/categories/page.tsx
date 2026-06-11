@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+// supabase removed
 import { Category } from '@/types';
 import Navbar from '@/components/Navbar';
 import { PlusIcon, Trash2Icon, ArrowLeftIcon, ChevronDownIcon, Edit2Icon, CheckIcon, XIcon } from 'lucide-react';
@@ -36,14 +36,8 @@ export default function CategoriesPage() {
     if (!user) return;
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .order('type', { ascending: false })
-        .order('name', { ascending: true });
-
-      if (error) throw error;
-      if (data) setCategories(data);
+      const data = await fetch('/api/v1/categories').then(r => r.json());
+      if (Array.isArray(data)) setCategories(data);
     } catch (error) {
       console.error('Error fetching categories:', error);
     } finally {
@@ -54,23 +48,18 @@ export default function CategoriesPage() {
   const addCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim()) return;
-
     try {
       setActionLoading(true);
-      const { data, error } = await supabase
-        .from('categories')
-        .insert([{ name: newName, type: newType }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      if (data) {
-        setCategories([...categories, data]);
-        setNewName('');
-      }
-    } catch (error: any) {
-      console.error('Error adding category:', error);
-      alert(error.code === '23505' ? 'Kategori sudah ada!' : 'Gagal menambah kategori.');
+      const data = await fetch('/api/v1/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName, type: newType }),
+      }).then(r => r.json());
+      if (data.error) throw new Error(data.error);
+      setCategories([...categories, data]);
+      setNewName('');
+    } catch (error: unknown) {
+      alert(error instanceof Error ? error.message : 'Gagal menambah kategori.');
     } finally {
       setActionLoading(false);
     }
@@ -88,21 +77,18 @@ export default function CategoriesPage() {
 
   const updateCategory = async (id: string) => {
     if (!editingName.trim()) return;
-
     try {
       setActionLoading(true);
-      const { error } = await supabase
-        .from('categories')
-        .update({ name: editingName })
-        .eq('id', id);
-
-      if (error) throw error;
-
+      const cat = categories.find(c => c.id === id);
+      await fetch(`/api/v1/categories/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: editingName, type: cat?.type }),
+      });
       setCategories(categories.map(c => c.id === id ? { ...c, name: editingName } : c));
       setEditingId(null);
       setEditingName('');
-    } catch (error: any) {
-      console.error('Error updating category:', error);
+    } catch (error) {
       alert('Gagal memperbarui kategori.');
     } finally {
       setActionLoading(false);
@@ -111,19 +97,12 @@ export default function CategoriesPage() {
 
   const deleteCategory = async (id: string) => {
     if (!confirm('Hapus kategori ini?')) return;
-
     try {
       setActionLoading(true);
-      const { error } = await supabase
-        .from('categories')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      setCategories(categories.filter((c) => c.id !== id));
+      await fetch(`/api/v1/categories/${id}`, { method: 'DELETE' });
+      setCategories(categories.filter(c => c.id !== id));
     } catch (error) {
-      console.error('Error deleting category:', error);
-      alert('Gagal menghapus kategori. Mungkin kategori ini sedang digunakan di transaksi.');
+      alert('Gagal menghapus kategori.');
     } finally {
       setActionLoading(false);
     }

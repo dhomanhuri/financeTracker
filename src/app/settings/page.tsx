@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+// supabase removed
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import { 
@@ -31,51 +31,28 @@ export default function SettingsPage() {
 
   const fetchApiKeys = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('api_keys')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (!error) {
-      setApiKeys(data || []);
-    }
+    const data = await fetch('/api/v1/api-keys').then(r => r.json());
+    setApiKeys(Array.isArray(data) ? data : []);
     setLoading(false);
   };
 
   const createApiKey = async () => {
-    if (!newKeyName.trim() || !user) return;
-
-    // Generate a random key
-    const rawKey = `ft_${Math.random().toString(36).substring(2)}${Math.random().toString(36).substring(2)}`;
-    
-    const { data, error } = await supabase
-      .from('api_keys')
-      .insert([
-        { 
-          user_id: user.id, 
-          name: newKeyName, 
-          key_hash: rawKey // In a real app, this should be a hash, but for simplicity we store raw for display once
-        }
-      ])
-      .select()
-      .single();
-
-    if (!error) {
-      setGeneratedKey(rawKey);
+    if (!newKeyName.trim()) return;
+    const data = await fetch('/api/v1/api-keys', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newKeyName }),
+    }).then(r => r.json());
+    if (data.raw_key) {
+      setGeneratedKey(data.raw_key);
       setNewKeyName('');
       fetchApiKeys();
     }
   };
 
   const deleteApiKey = async (id: string) => {
-    const { error } = await supabase
-      .from('api_keys')
-      .delete()
-      .eq('id', id);
-    
-    if (!error) {
-      fetchApiKeys();
-    }
+    await fetch(`/api/v1/api-keys/${id}`, { method: 'DELETE' });
+    fetchApiKeys();
   };
 
   const copyToClipboard = (text: string) => {

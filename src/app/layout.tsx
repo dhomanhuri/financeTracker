@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Providers } from "./providers";
 import { AuthProvider } from "@/context/AuthContext";
 import { PrivacyProvider } from "@/context/PrivacyContext";
 import { ThemeProvider } from "@/context/ThemeContext";
@@ -31,6 +32,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Providers>
         <AuthProvider>
           <ThemeProvider>
             <PrivacyProvider>
@@ -39,6 +41,7 @@ export default function RootLayout({
             </PrivacyProvider>
           </ThemeProvider>
         </AuthProvider>
+        </Providers>
       </body>
     </html>
   );

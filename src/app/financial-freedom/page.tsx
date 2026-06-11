@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+// supabase removed
 import { 
   CalculatorIcon, 
   TrendingUpIcon, 
@@ -71,25 +71,18 @@ export default function FinancialFreedomPage() {
 
   const fetchLatestEntry = async () => {
     try {
-      const { data, error } = await supabase
-        .from('financial_freedom_entries')
-        .select('*')
-        .eq('user_id', user!.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (data) {
+      const data = await fetch('/api/v1/financial-freedom').then(r => r.json());
+      if (data && !data.error) {
         setInputs({
           initialSavings: Number(data.initial_savings || 0),
           monthlySavings: Number(data.monthly_savings),
           returnRate: Number(data.return_rate),
           monthlyExpenses: Number(data.monthly_expenses),
           monthlyIncome: Number(data.monthly_income || 0),
-          dependents: Number(data.dependents || 0)
+          dependents: Number(data.dependents || 0),
         });
       }
-    } catch (error) {
+    } catch {
       // No entry found is fine
     }
   };
@@ -98,20 +91,22 @@ export default function FinancialFreedomPage() {
     if (!user) return;
     setSaveStatus('saving');
     try {
-      const { error } = await supabase
-        .from('financial_freedom_entries')
-        .insert([{
-          user_id: user.id,
-          initial_savings: inputs.initialSavings,
-          monthly_savings: inputs.monthlySavings,
-          annual_savings: inputs.monthlySavings * 12,
-          return_rate: inputs.returnRate,
-          monthly_expenses: inputs.monthlyExpenses,
-          annual_expenses: inputs.monthlyExpenses * 12,
-          monthly_income: inputs.monthlyIncome,
-          dependents: inputs.dependents,
-          target_amount: (inputs.monthlyExpenses * 12) / 0.03 // 3% rule
-        }]);
+      const res = await fetch('/api/v1/financial-freedom', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          initial_savings:   inputs.initialSavings,
+          monthly_savings:   inputs.monthlySavings,
+          annual_savings:    inputs.monthlySavings * 12,
+          return_rate:       inputs.returnRate,
+          monthly_expenses:  inputs.monthlyExpenses,
+          annual_expenses:   inputs.monthlyExpenses * 12,
+          monthly_income:    inputs.monthlyIncome,
+          dependents:        inputs.dependents,
+          target_amount:     (inputs.monthlyExpenses * 12) / 0.03,
+        }),
+      });
+      const error = res.ok ? null : await res.json();
 
       if (error) throw error;
       setSaveStatus('saved');

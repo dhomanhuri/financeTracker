@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { NewTransaction, Category, Account } from '@/types';
 import { PlusIcon, ChevronDownIcon, CreditCardIcon, CalendarIcon, TagsIcon, DollarSignIcon, TrendingUpIcon, TrendingDownIcon } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+// supabase removed — data fetched via internal API
 
 interface TransactionFormProps {
   onAdd: (transaction: NewTransaction) => Promise<void>;
@@ -28,20 +28,20 @@ export default function TransactionForm({ onAdd, isLoading }: TransactionFormPro
 
   const fetchData = async () => {
     const [catRes, accRes] = await Promise.all([
-      supabase.from('categories').select('*').order('name', { ascending: true }),
-      supabase.from('accounts').select('*').order('name', { ascending: true })
+      fetch('/api/v1/categories').then(r => r.json()),
+      fetch('/api/v1/accounts').then(r => r.json()),
     ]);
 
-    if (catRes.data) {
-      setCategories(catRes.data);
-      const firstCat = catRes.data.find(c => c.type === formData.type);
+    if (Array.isArray(catRes)) {
+      setCategories(catRes);
+      const firstCat = catRes.find((c: Category) => c.type === formData.type);
       if (firstCat) setFormData(prev => ({ ...prev, category_id: firstCat.id }));
     }
 
-    if (accRes.data) {
-      setAccounts(accRes.data);
-      if (accRes.data.length > 0) {
-        setFormData(prev => ({ ...prev, account_id: accRes.data[0].id }));
+    if (Array.isArray(accRes)) {
+      setAccounts(accRes);
+      if (accRes.length > 0) {
+        setFormData(prev => ({ ...prev, account_id: accRes[0].id }));
       }
     }
   };

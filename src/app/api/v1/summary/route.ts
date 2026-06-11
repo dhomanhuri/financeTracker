@@ -1,46 +1,39 @@
 import { NextResponse } from 'next/server';
 import { validateApiKey } from '@/lib/api-auth';
+import { query } from '@/lib/db';
 
 export async function GET(req: Request) {
   const auth = await validateApiKey(req);
-  
-  if ('error' in auth) {
-    return NextResponse.json({ error: auth.error }, { status: auth.status });
-  }
-
-  const { userId, userClient } = auth;
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  const { userId } = auth;
 
   try {
-    // Get total balance
-    const { data: accounts, error: accError } = await userClient
-      .from('accounts')
-      .select('balance')
-      .eq('user_id', userId);
+    const accounts = await query(
+      `SELECT * FROM accounts WHERE user_id = $1`,
+      [userId]
+    );
 
-    if (accError) throw accError;
+    const totalBalance = accounts.rows.reduce((sum, a) => sum + parseFloat(a.balance), 0);
 
-    const totalBalance = accounts?.reduce((sum, acc) => sum + acc.balance, 0) || 0;
-
-    // Get recent transactions
-    const { data: recentTransactions, error: txError } = await userClient
-      .from('transactions')
-      .select(`
-        *,
-        categories(name, type),
-        accounts(name, color)
-      `)
-      .eq('user_id', userId)
-      .order('date', { ascending: false })
-      .limit(5);
-
-    if (txError) throw txError;
+    const transactions = await query(
+      `SELECT t.*,
+              c.name AS category_name, c.type AS category_type,
+              a.name AS account_name,  a.color AS account_color
+       FROM transactions t
+       LEFT JOIN categories c ON t.category_id = c.id
+       LEFT JOIN accounts   a ON t.account_id  = a.id
+       WHERE t.user_id = $1
+       ORDER BY t.date DESC
+       LIMIT 5`,
+      [userId]
+    );
 
     return NextResponse.json({
-      total_balance: totalBalance,
-      account_count: accounts?.length || 0,
-      recent_transactions: recentTransactions
+      total_balance:        totalBalance,
+      account_count:        accounts.rows.length,
+      recent_transactions:  transactions.rows,
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error' }, { status: 500 });
   }
 }
