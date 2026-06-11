@@ -32,13 +32,7 @@ module.exports = {
         type: Sequelize.NUMERIC,
         allowNull: false,
       },
-    }, {
-      schema: 'public',
-    });
-
-    await queryInterface.sequelize.query(`
-      ALTER TABLE public.stocks
-    `);
+    }, { schema: 'public' });
 
     // UNIQUE constraint (user_id, symbol)
     await queryInterface.addConstraint('stocks', {
@@ -46,17 +40,6 @@ module.exports = {
       type: 'unique',
       name: 'stocks_user_id_symbol_key',
     });
-
-    // Enable RLS
-    await queryInterface.sequelize.query(`
-      ALTER TABLE public.stocks ENABLE ROW LEVEL SECURITY;
-    `);
-
-    // RLS Policy
-    await queryInterface.sequelize.query(`
-      DROP POLICY IF EXISTS "Users can only access their own stocks" ON public.stocks;
-      CREATE POLICY "Users can only access their own stocks" ON public.stocks
-    `);
   },
 
   async down(queryInterface, Sequelize) {

@@ -20,60 +20,15 @@ module.exports = {
         allowNull: false,
         defaultValue: Sequelize.literal("timezone('utc', now())"),
       },
-      monthly_savings: {
-        type: Sequelize.NUMERIC,
-        allowNull: false,
-        defaultValue: 0,
-      },
-      annual_savings: {
-        type: Sequelize.NUMERIC,
-        allowNull: false,
-        defaultValue: 0,
-      },
-      return_rate: {
-        type: Sequelize.NUMERIC,
-        allowNull: false,
-        defaultValue: 0,
-      },
-      monthly_expenses: {
-        type: Sequelize.NUMERIC,
-        allowNull: false,
-        defaultValue: 0,
-      },
-      annual_expenses: {
-        type: Sequelize.NUMERIC,
-        allowNull: false,
-        defaultValue: 0,
-      },
-      monthly_income: {
-        type: Sequelize.NUMERIC,
-        allowNull: true,
-        defaultValue: 0,
-      },
-      dependents: {
-        type: Sequelize.INTEGER,
-        allowNull: true,
-        defaultValue: 0,
-      },
-      target_amount: {
-        type: Sequelize.NUMERIC,
-        allowNull: true,
-        defaultValue: 0,
-      },
-    }, {
-      schema: 'public',
-    });
-
-    // Enable RLS
-    await queryInterface.sequelize.query(`
-      ALTER TABLE public.financial_freedom_entries ENABLE ROW LEVEL SECURITY;
-    `);
-
-    // RLS Policy
-    await queryInterface.sequelize.query(`
-      DROP POLICY IF EXISTS "Users can only access their own entries" ON public.financial_freedom_entries;
-      CREATE POLICY "Users can only access their own entries" ON public.financial_freedom_entries
-    `);
+      monthly_savings:  { type: Sequelize.NUMERIC, allowNull: false, defaultValue: 0 },
+      annual_savings:   { type: Sequelize.NUMERIC, allowNull: false, defaultValue: 0 },
+      return_rate:      { type: Sequelize.NUMERIC, allowNull: false, defaultValue: 0 },
+      monthly_expenses: { type: Sequelize.NUMERIC, allowNull: false, defaultValue: 0 },
+      annual_expenses:  { type: Sequelize.NUMERIC, allowNull: false, defaultValue: 0 },
+      monthly_income:   { type: Sequelize.NUMERIC, allowNull: true,  defaultValue: 0 },
+      dependents:       { type: Sequelize.INTEGER, allowNull: true,  defaultValue: 0 },
+      target_amount:    { type: Sequelize.NUMERIC, allowNull: true,  defaultValue: 0 },
+    }, { schema: 'public' });
   },
 
   async down(queryInterface, Sequelize) {
