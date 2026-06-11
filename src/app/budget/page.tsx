@@ -15,6 +15,7 @@ interface BudgetRow {
   spent: number;
   month: number;
   year: number;
+  notes?: string | null;
 }
 
 interface Category {
@@ -38,6 +39,7 @@ export default function BudgetPage() {
   const [loading,    setLoading]    = useState(true);
   const [selCat,     setSelCat]     = useState('');
   const [amount,     setAmount]     = useState('');
+  const [notes,      setNotes]      = useState('');
   const [saving,     setSaving]     = useState(false);
 
   useEffect(() => {
@@ -79,9 +81,10 @@ export default function BudgetPage() {
     await fetch('/api/v1/budgets', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ category_id: selCat, amount: parseFloat(amount), month, year }),
+      body: JSON.stringify({ category_id: selCat, amount: parseFloat(amount), month, year, notes }),
     });
     setAmount('');
+    setNotes('');
     await fetchAll();
     setSaving(false);
   };
@@ -197,6 +200,18 @@ export default function BudgetPage() {
                       />
                     </div>
                   </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1.5">
+                      Deskripsi <span className="normal-case text-muted-foreground/50">(opsional)</span>
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="contoh: untuk makan siang & kopi"
+                      className="w-full bg-card-bg border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 resize-none placeholder:text-muted-foreground/40"
+                      value={notes}
+                      onChange={e => setNotes(e.target.value)}
+                    />
+                  </div>
                   <button
                     type="submit"
                     disabled={saving || availCats.length === 0 || !amount}
@@ -233,6 +248,9 @@ export default function BudgetPage() {
                       <div className="flex items-start justify-between mb-3">
                         <div>
                           <p className="font-semibold text-sm">{b.category_name}</p>
+                          {b.notes && (
+                            <p className="text-xs text-muted-foreground/70 mt-0.5 italic">{b.notes}</p>
+                          )}
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-xs text-muted-foreground">
                               <MaskedAmount amount={Number(b.spent)} /> / <MaskedAmount amount={Number(b.budget_amount)} />

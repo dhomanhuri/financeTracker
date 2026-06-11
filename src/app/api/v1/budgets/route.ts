@@ -16,6 +16,7 @@ export async function GET(req: Request) {
       b.id,
       b.category_id,
       b.amount        AS budget_amount,
+      b.notes,
       b.month,
       b.year,
       c.name          AS category_name,
@@ -43,7 +44,7 @@ export async function POST(req: Request) {
   const auth = await validateApiKey(req);
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const { category_id, amount, month, year } = await req.json();
+  const { category_id, amount, month, year, notes } = await req.json();
   if (!category_id || !amount) {
     return NextResponse.json({ error: 'category_id dan amount wajib' }, { status: 400 });
   }
@@ -52,12 +53,12 @@ export async function POST(req: Request) {
   const y = year  || new Date().getFullYear();
 
   const result = await query(`
-    INSERT INTO budgets (user_id, category_id, amount, month, year)
-    VALUES ($1, $2, $3, $4, $5)
+    INSERT INTO budgets (user_id, category_id, amount, month, year, notes)
+    VALUES ($1, $2, $3, $4, $5, $6)
     ON CONFLICT (user_id, category_id, month, year)
-    DO UPDATE SET amount = EXCLUDED.amount
+    DO UPDATE SET amount = EXCLUDED.amount, notes = EXCLUDED.notes
     RETURNING *
-  `, [auth.userId, category_id, amount, m, y]);
+  `, [auth.userId, category_id, amount, m, y, notes || null]);
 
   return NextResponse.json(result.rows[0], { status: 201 });
 }
