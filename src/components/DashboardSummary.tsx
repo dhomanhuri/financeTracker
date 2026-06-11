@@ -3,6 +3,7 @@
 import { Transaction } from '@/types';
 import { TrendingDownIcon, WalletIcon, TrendingUpIcon } from 'lucide-react';
 import MaskedAmount from './MaskedAmount';
+import { toNumber } from '@/lib/format';
 
 interface DashboardSummaryProps {
   transactions: Transaction[];
@@ -21,14 +22,14 @@ export default function DashboardSummary({ transactions, totalAccountBalance, to
   // Calculate stats
   const totalIncome = transactions
     .filter((t) => t.type === 'income')
-    .reduce((acc, curr) => acc + curr.amount, 0);
+    .reduce((acc, curr) => acc + toNumber(curr.amount), 0);
 
   const totalExpense = transactions
     .filter((t) => t.type === 'expense')
-    .reduce((acc, curr) => acc + curr.amount, 0);
+    .reduce((acc, curr) => acc + toNumber(curr.amount), 0);
 
-  const cashBalance = totalAccountBalance !== undefined ? totalAccountBalance : (totalIncome - totalExpense);
-  const netWorth = cashBalance + totalStockValue;
+  const cashBalance = totalAccountBalance !== undefined ? toNumber(totalAccountBalance) : (totalIncome - totalExpense);
+  const netWorth = cashBalance + toNumber(totalStockValue);
 
   // Monthly stats
   const currentMonth = today.getMonth();
@@ -39,14 +40,14 @@ export default function DashboardSummary({ transactions, totalAccountBalance, to
       const d = new Date(t.date);
       return d.getMonth() === currentMonth && d.getFullYear() === currentYear && t.type === 'income';
     })
-    .reduce((acc, curr) => acc + curr.amount, 0);
+    .reduce((acc, curr) => acc + toNumber(curr.amount), 0);
 
   const monthlyExpense = transactions
     .filter((t) => {
       const d = new Date(t.date);
       return d.getMonth() === currentMonth && d.getFullYear() === currentYear && t.type === 'expense';
     })
-    .reduce((acc, curr) => acc + curr.amount, 0);
+    .reduce((acc, curr) => acc + toNumber(curr.amount), 0);
 
   return (
     <div className="space-y-10 animate-fade-in">

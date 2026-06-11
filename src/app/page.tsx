@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 // supabase removed
+import { formatRupiah, toNumber } from '@/lib/format';
 import { NewTransaction, Transaction, Stock } from '@/types';
 import DashboardSummary from '@/components/DashboardSummary';
 import CashFlowChart from '@/components/charts/CashFlowChart';
@@ -239,19 +240,19 @@ export default function Home() {
                         <div className="text-center md:text-left">
                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">In Period</p>
                           <p className="text-sm font-bold text-green-500">
-                            + Rp {periodSummary.total_income.toLocaleString('id-ID')}
+                            + {formatRupiah(periodSummary.total_income)}
                           </p>
                         </div>
                         <div className="text-center md:text-left">
                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Out Period</p>
                           <p className="text-sm font-bold text-red-500">
-                            - Rp {periodSummary.total_expense.toLocaleString('id-ID')}
+                            - {formatRupiah(periodSummary.total_expense)}
                           </p>
                         </div>
                         <div className="text-center md:text-left">
                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Net Change</p>
                           <p className={`text-sm font-bold ${periodSummary.net_change >= 0 ? 'text-accent' : 'text-orange-500'}`}>
-                            {periodSummary.net_change >= 0 ? '+' : ''} Rp {periodSummary.net_change.toLocaleString('id-ID')}
+                            {periodSummary.net_change >= 0 ? '+' : ''} {formatRupiah(Math.abs(periodSummary.net_change))}
                           </p>
                         </div>
                       </div>

@@ -24,6 +24,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import MaskedAmount from '@/components/MaskedAmount';
+import { formatRupiah, formatRupiahShort, toNumber } from '@/lib/format';
 
 export default function FinancialFreedomPage() {
   const { user } = useAuth();
@@ -119,8 +120,8 @@ export default function FinancialFreedomPage() {
 
   // Calculations
   const calculations = useMemo(() => {
-    const annualSavings = inputs.monthlySavings * 12;
-    const annualExpenses = inputs.monthlyExpenses * 12;
+    const annualSavings  = toNumber(inputs.monthlySavings)  * 12;
+    const annualExpenses = toNumber(inputs.monthlyExpenses) * 12;
     
     // 3% withdrawal rule + 3% inflation buffer implies we need a portfolio that can sustain this.
     // Usually, the "4% rule" is standard (25x expenses).
@@ -129,7 +130,7 @@ export default function FinancialFreedomPage() {
     const targetAmount = annualExpenses / 0.03; 
 
     const projection = [];
-    let currentBalance = inputs.initialSavings;
+    let currentBalance = toNumber(inputs.initialSavings);
     let year = 0;
     const maxYears = 50; // Cap at 50 years to avoid infinite loops
 
@@ -179,7 +180,7 @@ export default function FinancialFreedomPage() {
     }
 
     if (inputs.monthlySavings < savings) {
-      advice.push(`Try to increase your savings to at least Rp ${savings.toLocaleString('id-ID')} (20%) to speed up financial freedom.`);
+      advice.push(`Try to increase your savings to at least Rp ${formatRupiah(savings, false)} (20%) to speed up financial freedom.`);
     } else {
       advice.push("Great job! You are saving more than the recommended 20%.");
     }
@@ -247,7 +248,7 @@ export default function FinancialFreedomPage() {
                       />
                     </div>
                     <p className="text-xs text-muted-foreground ml-2">
-                      Annual: Rp {(inputs.monthlySavings * 12).toLocaleString('id-ID')}
+                      Annual: Rp {formatRupiah(toNumber(inputs.monthlySavings) * 12, false)}
                     </p>
                   </div>
 
@@ -282,7 +283,7 @@ export default function FinancialFreedomPage() {
                       />
                     </div>
                     <p className="text-xs text-muted-foreground ml-2">
-                      Annual: Rp {(inputs.monthlyExpenses * 12).toLocaleString('id-ID')}
+                      Annual: Rp {formatRupiah(toNumber(inputs.monthlyExpenses) * 12, false)}
                     </p>
                   </div>
 
@@ -419,7 +420,7 @@ export default function FinancialFreedomPage() {
                     <YAxis 
                       stroke="var(--muted-foreground)"
                       tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
-                      tickFormatter={(value) => `Rp${(value / 1000000).toFixed(0)}M`}
+                      tickFormatter={(value) => formatRupiahShort(value)}
                       tickLine={false}
                       axisLine={false}
                     />
@@ -430,7 +431,7 @@ export default function FinancialFreedomPage() {
                         borderRadius: '12px',
                         color: 'var(--foreground)' 
                       }}
-                      formatter={(value: any) => [`Rp ${Number(value).toLocaleString('id-ID', { maximumFractionDigits: 0 })}`, 'Portfolio Value']}
+                      formatter={(value: number | undefined) => [formatRupiah(value ?? 0), 'Portfolio Value']}
                     />
                     <Area 
                       type="monotone" 
@@ -458,19 +459,19 @@ export default function FinancialFreedomPage() {
                     <div className="p-5 rounded-2xl bg-card-bg border border-border">
                       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Needs (50%)</p>
                       <p className="text-xl font-bold text-foreground tabular-nums">
-                        Rp {recommendations.allocations.needs.toLocaleString('id-ID')}
+                        Rp {formatRupiah(recommendations.allocations.needs, false)}
                       </p>
                     </div>
                     <div className="p-5 rounded-2xl bg-card-bg border border-border">
                       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Wants (30%)</p>
                       <p className="text-xl font-bold text-foreground tabular-nums">
-                        Rp {recommendations.allocations.wants.toLocaleString('id-ID')}
+                        Rp {formatRupiah(recommendations.allocations.wants, false)}
                       </p>
                     </div>
                     <div className="p-5 rounded-2xl bg-card-bg border border-border">
                       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Savings (20%)</p>
                       <p className="text-xl font-bold text-foreground tabular-nums">
-                        Rp {recommendations.allocations.savings.toLocaleString('id-ID')}
+                        Rp {formatRupiah(recommendations.allocations.savings, false)}
                       </p>
                     </div>
                   </div>

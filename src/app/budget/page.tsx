@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import { PlusIcon, Trash2Icon, ChevronLeftIcon, ChevronRightIcon, WalletIcon } from 'lucide-react';
 import MaskedAmount from '@/components/MaskedAmount';
+import { toNumber } from '@/lib/format';
 
 interface BudgetRow {
   id: string;
@@ -96,8 +97,8 @@ export default function BudgetPage() {
   };
 
   // Hitung total
-  const totalBudget = budgets.reduce((s, b) => s + Number(b.budget_amount), 0);
-  const totalSpent  = budgets.reduce((s, b) => s + Number(b.spent), 0);
+  const totalBudget = budgets.reduce((s, b) => s + toNumber(b.budget_amount), 0);
+  const totalSpent  = budgets.reduce((s, b) => s + toNumber(b.spent), 0);
   const totalPct    = totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
 
   // Kategori yang belum punya budget bulan ini
@@ -240,8 +241,8 @@ export default function BudgetPage() {
                 </div>
               ) : (
                 budgets.map(b => {
-                  const pct     = b.budget_amount > 0 ? Math.min((Number(b.spent) / Number(b.budget_amount)) * 100, 100) : 0;
-                  const over    = Number(b.spent) > Number(b.budget_amount);
+                  const pct     = b.budget_amount > 0 ? Math.min((toNumber(b.spent) / toNumber(b.budget_amount)) * 100, 100) : 0;
+                  const over    = toNumber(b.spent) > toNumber(b.budget_amount);
                   const warning = pct >= 80;
                   return (
                     <div key={b.id} className="glass-card p-5 rounded-2xl border border-border group hover:border-accent/30 transition">
@@ -253,7 +254,7 @@ export default function BudgetPage() {
                           )}
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-xs text-muted-foreground">
-                              <MaskedAmount amount={Number(b.spent)} /> / <MaskedAmount amount={Number(b.budget_amount)} />
+                              <MaskedAmount amount={toNumber(b.spent)} /> / <MaskedAmount amount={toNumber(b.budget_amount)} />
                             </span>
                             {over && <span className="text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full font-bold">OVER</span>}
                           </div>

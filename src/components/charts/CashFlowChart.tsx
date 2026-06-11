@@ -12,6 +12,7 @@ import {
   Legend
 } from 'recharts';
 import { Transaction } from '@/types';
+import { formatRupiah, formatRupiahShort, toNumber } from '@/lib/format';
 
 interface CashFlowChartProps {
   transactions: Transaction[];
@@ -19,36 +20,31 @@ interface CashFlowChartProps {
 
 export default function CashFlowChart({ transactions }: CashFlowChartProps) {
   const data = useMemo(() => {
-    // Group transactions by date
-    const groupedData = transactions.reduce((acc, curr) => {
-      const date = new Date(curr.date).toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: 'short'
-      });
-      
-      if (!acc[date]) {
-        acc[date] = { date, income: 0, expense: 0 };
-      }
-      
-      if (curr.type === 'income') {
-        acc[date].income += curr.amount;
-      } else {
-        acc[date].expense += curr.amount;
-      }
-      
-      return acc;
-    }, {} as Record<string, { date: string; income: number; expense: number }>);
+    // Simpan raw date untuk sorting yang akurat
+    const groupedData: Record<string, { rawDate: string; date: string; income: number; expense: number }> = {};
 
-    // Sort by date (need original date for sorting, but key is formatted string)
-    // To simplify sorting, we can rely on the fact that transactions are usually fetched sorted or sort them first.
-    // Assuming transactions prop is already sorted by date desc, we might want to reverse it for the chart (oldest to newest).
-    
-    // Let's ensure we display the last 7 days or so with data, or just all data passed
-    // For better UX, let's take the input transactions, sort by date asc
-    
-    const sortedDates = Object.values(groupedData).reverse(); // Assuming input is desc
-    
-    return sortedDates;
+    transactions.forEach((curr) => {
+      const raw  = curr.date.slice(0, 10); // YYYY-MM-DD
+      const label = new Date(raw + 'T00:00:00').toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: 'short',
+      });
+
+      if (!groupedData[raw]) {
+        groupedData[raw] = { rawDate: raw, date: label, income: 0, expense: 0 };
+      }
+
+      if (curr.type === 'income') {
+        groupedData[raw].income += toNumber(curr.amount);
+      } else {
+        groupedData[raw].expense += toNumber(curr.amount);
+      }
+    });
+
+    // Sort ascending by actual date
+    return Object.values(groupedData)
+      .sort((a, b) => a.rawDate.localeCompare(b.rawDate))
+      .slice(-30); // Tampilkan max 30 hari terakhir
   }, [transactions]);
 
   if (transactions.length === 0) {
@@ -83,7 +79,7 @@ export default function CashFlowChart({ transactions }: CashFlowChartProps) {
           <YAxis 
             stroke="var(--muted-foreground)" 
             tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
-            tickFormatter={(value) => `Rp${(value / 1000).toFixed(0)}k`}
+            tickFormatter={(value) => formatRupiahShort(value)}
             tickLine={false}
             axisLine={false}
           />
@@ -95,7 +91,7 @@ export default function CashFlowChart({ transactions }: CashFlowChartProps) {
               color: 'var(--foreground)' 
             }}
             cursor={{ fill: 'var(--muted)' }}
-            formatter={(value: any) => [`Rp ${Number(value).toLocaleString('id-ID')}`, '']}
+            formatter={(value: number | undefined) => [formatRupiah(value ?? 0), '']}
           />
           <Legend wrapperStyle={{ paddingTop: '20px' }} />
           <Bar 

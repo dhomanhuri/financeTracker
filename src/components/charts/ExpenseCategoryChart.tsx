@@ -10,6 +10,7 @@ import {
   Legend
 } from 'recharts';
 import { Transaction } from '@/types';
+import { formatRupiah, toNumber } from '@/lib/format';
 
 interface ExpenseCategoryChartProps {
   transactions: Transaction[];
@@ -49,7 +50,7 @@ export default function ExpenseCategoryChart({ transactions }: ExpenseCategoryCh
         acc[categoryName] = 0;
       }
       
-      acc[categoryName] += curr.amount;
+      acc[categoryName] += toNumber(curr.amount);
       return acc;
     }, {} as Record<string, number>);
 
@@ -93,7 +94,7 @@ export default function ExpenseCategoryChart({ transactions }: ExpenseCategoryCh
               borderRadius: '12px',
               color: 'var(--foreground)' 
             }}
-            formatter={(value: any) => [`Rp ${Number(value).toLocaleString('id-ID')}`, 'Amount']}
+            formatter={(value: number | undefined) => [formatRupiah(value ?? 0), 'Amount']}
           />
           <Legend 
             layout="vertical" 

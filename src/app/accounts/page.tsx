@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 // supabase removed
+import { formatRupiah, toNumber } from '@/lib/format';
 import { Account, NewAccount, Stock, NewStock } from '@/types';
 import Navbar from '@/components/Navbar';
 import { 
@@ -581,7 +582,7 @@ export default function AccountsPage() {
                               <div>
                                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Current</p>
                                 <p className={`text-sm font-semibold ${currentPrice ? 'text-foreground' : 'text-muted-foreground italic'}`}>
-                                  {currentPrice ? `Rp ${currentPrice.toLocaleString('id-ID')}` : 'Loading...'}
+                                  {currentPrice ? formatRupiah(currentPrice) : 'Loading...'}
                                 </p>
                               </div>
                               <div>

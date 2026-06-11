@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import { usePrivacy } from '@/context/PrivacyContext';
 import { useAuth } from '@/context/AuthContext';
+import { formatRupiah, toNumber } from '@/lib/format';
 
 interface MaskedAmountProps {
-  amount: number;
+  amount: number | string | null | undefined;
   className?: string;
-  prefix?: string;
+  prefix?: string;   // override prefix (misal: '+ Rp ' atau '- Rp ')
   forceVisible?: boolean;
 }
 
@@ -48,9 +48,12 @@ export default function MaskedAmount({ amount, className = "", prefix = "Rp ", f
   // Actually, if global is unmasked, everything is open.
   // If global is masked, everything is masked by default, but can be locally unmasked.
 
-  const displayValue = isVisible 
-    ? `${prefix}${amount.toLocaleString('id-ID', { maximumFractionDigits: 0 })}`
-    : '••••••••••';
+  const num = toNumber(amount);
+  const formatted = prefix
+    ? `${prefix}${Math.abs(num).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+    : formatRupiah(num);
+
+  const displayValue = isVisible ? formatted : '••••••••••';
 
   return (
     <span className={`inline-flex items-center gap-2 group cursor-pointer ${className}`} onClick={handleToggle}>
