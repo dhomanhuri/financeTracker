@@ -62,7 +62,10 @@ export default function BudgetPage() {
     setBudgets(Array.isArray(bRes) ? bRes : []);
     const expCats = Array.isArray(cRes) ? cRes.filter((c: Category) => c.type === 'expense') : [];
     setCategories(expCats);
-    if (!selCat && expCats.length > 0) setSelCat(expCats[0].id);
+    // Selalu update selCat ke kategori pertama yang tersedia setelah fetch
+    const usedIds = new Set(Array.isArray(bRes) ? bRes.map((b: BudgetRow) => b.category_id) : []);
+    const available = expCats.filter((c: Category) => !usedIds.has(c.id));
+    if (available.length > 0) setSelCat(available[0].id);
     setLoading(false);
   };
 
@@ -79,15 +82,25 @@ export default function BudgetPage() {
     e.preventDefault();
     if (!selCat || !amount) return;
     setSaving(true);
-    await fetch('/api/v1/budgets', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ category_id: selCat, amount: parseFloat(amount), month, year, notes }),
-    });
-    setAmount('');
-    setNotes('');
-    await fetchAll();
-    setSaving(false);
+    try {
+      const res = await fetch('/api/v1/budgets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category_id: selCat, amount: parseFloat(amount), month, year, notes }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(`Gagal menyimpan budget: ${err.error || res.statusText}`);
+        return;
+      }
+      setAmount('');
+      setNotes('');
+      await fetchAll();
+    } catch (err) {
+      alert('Gagal menyimpan budget. Coba lagi.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const deleteBudget = async (id: string) => {
