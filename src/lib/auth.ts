@@ -4,6 +4,8 @@ import { query } from './db';
 import bcrypt from 'bcryptjs';
 
 export const authOptions: NextAuthOptions = {
+  // Disable CSRF check untuk API routes di App Router
+  useSecureCookies: false,
   providers: [
     CredentialsProvider({
       name: 'Credentials',

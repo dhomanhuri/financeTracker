@@ -125,7 +125,7 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newTransaction),
       }).then(r => r.json());
-      if (data.error) throw new Error(data.error);
+      if (data.error) throw new Error(data.error + (data.detail ? ' | ' + JSON.stringify(data.detail) : ''));
       setTransactions([data, ...transactions]);
       // Refresh balance
       fetchTransactions();

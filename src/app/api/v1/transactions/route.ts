@@ -69,15 +69,28 @@ export async function POST(req: Request) {
     const { amount, type, category_id, account_id, title, description, date } = body;
     const transactionTitle = title || description;
 
-    if (!amount || !type || !category_id || !account_id || !transactionTitle) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    if (!amount || !type || !account_id || !transactionTitle) {
+      return NextResponse.json({ 
+        error: 'Missing required fields',
+        detail: { amount: !!amount, type: !!type, account_id: !!account_id, title: !!transactionTitle }
+      }, { status: 400 });
+    }
+    // Jika category_id kosong, cari kategori "Lainnya" milik user atau global
+    let finalCategoryId = category_id;
+    if (!finalCategoryId) {
+      const fallback = await query(
+        `SELECT id FROM categories WHERE name='Lainnya' AND type=$1 AND (user_id=$2 OR user_id IS NULL) LIMIT 1`,
+        [type, userId]
+      );
+      if (fallback.rows[0]) finalCategoryId = fallback.rows[0].id;
+      else return NextResponse.json({ error: 'Kategori tidak ditemukan' }, { status: 400 });
     }
 
     const result = await query(
       `INSERT INTO transactions (user_id, amount, type, category_id, account_id, title, date)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [userId, amount, type, category_id, account_id, transactionTitle, date || new Date().toISOString().split('T')[0]]
+      [userId, amount, type, finalCategoryId, account_id, transactionTitle, date || new Date().toISOString().split('T')[0]]
     );
 
     // Update account balance

@@ -18,15 +18,16 @@ export async function validateApiKey(req: Request) {
       return { error: 'Invalid API Key', status: 401 };
     }
 
-    const userId = result.rows[0].user_id;
-    return { userId };
+    return { userId: result.rows[0].user_id as string };
   }
 
-  // Fallback: cek session NextAuth (untuk request dari browser)
+  // Fallback: cek session NextAuth
+  // Passing req & res tidak tersedia di App Router, 
+  // getServerSession() tanpa arg membaca cookies() dari Next.js context
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return { error: 'Unauthorized', status: 401 };
   }
 
-  return { userId: session.user.id };
+  return { userId: session.user.id as string };
 }
