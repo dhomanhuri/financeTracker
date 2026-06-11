@@ -19,7 +19,8 @@ import {
   LogOutIcon,
   UserIcon,
   CalculatorIcon,
-  MessageCircleIcon
+  MessageCircleIcon,
+  PiggyBankIcon
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { usePrivacy } from '@/context/PrivacyContext';
@@ -33,6 +34,7 @@ export default function Navbar() {
 
   const navItems = [
     { name: 'Dashboard', icon: LayoutDashboardIcon, href: '/' },
+    { name: 'Budget', icon: PiggyBankIcon, href: '/budget' },
     { name: 'Categories', icon: TagsIcon, href: '/categories' },
     { name: 'Accounts', icon: CreditCardIcon, href: '/accounts' },
     { name: 'Freedom', icon: CalculatorIcon, href: '/financial-freedom' },
