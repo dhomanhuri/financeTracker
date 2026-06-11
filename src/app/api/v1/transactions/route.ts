@@ -34,6 +34,14 @@ export async function GET(req: Request) {
 
     const result = await query(sql, params);
 
+    // Transform flat → nested agar kompatibel dengan frontend
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const transform = (row: any) => ({
+      ...row,
+      categories: row.category_name ? { name: row.category_name, type: row.category_type } : null,
+      accounts:   row.account_name  ? { name: row.account_name,  color: row.account_color } : null,
+    });
+
     if (from || to) {
       const sumResult = await query(
         `SELECT type, SUM(amount) AS total
@@ -50,10 +58,10 @@ export async function GET(req: Request) {
       });
       summary.net_change = summary.total_income - summary.total_expense;
 
-      return NextResponse.json({ period: { from, to }, summary, transactions: result.rows });
+      return NextResponse.json({ period: { from, to }, summary, transactions: result.rows.map(transform) });
     }
 
-    return NextResponse.json(result.rows);
+    return NextResponse.json(result.rows.map(transform));
   } catch (error: unknown) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Error' }, { status: 500 });
   }
