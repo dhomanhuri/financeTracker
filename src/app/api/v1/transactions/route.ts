@@ -102,6 +102,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json(result.rows[0]);
   } catch (error: unknown) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error' }, { status: 500 });
+    console.error('[POST /api/v1/transactions]', error);
+    return NextResponse.json({ 
+      error: error instanceof Error ? error.message : 'Unknown error',
+      detail: String(error)
+    }, { status: 500 });
   }
 }

@@ -4,8 +4,6 @@ import { query } from './db';
 import bcrypt from 'bcryptjs';
 
 export const authOptions: NextAuthOptions = {
-  // Disable CSRF check untuk API routes di App Router
-  useSecureCookies: false,
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -34,6 +32,17 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt' },
   pages:   { signIn: '/login' },
   secret:  process.env.NEXTAUTH_SECRET,
+  cookies: {
+    sessionToken: {
+      name: 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: false,  // false untuk http (localhost)
+      },
+    },
+  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) token.id = user.id;
