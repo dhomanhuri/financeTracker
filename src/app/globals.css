@@ -127,3 +127,14 @@ body {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.4);
 }
+
+/* ─── Mobile bottom nav safe area ─────────────────────── */
+@media (max-width: 767px) {
+  main {
+    padding-bottom: 5rem !important;
+  }
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
